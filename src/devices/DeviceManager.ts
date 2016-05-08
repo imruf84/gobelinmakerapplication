@@ -47,6 +47,9 @@ class DeviceManager {
             // Végigmegyünk a portokon.
             ports.forEach(function (port) {
 
+                // HACK: linux alatt hibát generál, ami nem okoz gondot csak kényelmetlen.
+                if (port.comName == "ttyAMA0") return;
+
                 // Port létrehozása.
                 var sp = new SerialPort(port.comName, {
                     baudrate: 9600,

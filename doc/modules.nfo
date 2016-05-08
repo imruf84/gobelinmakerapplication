@@ -8,8 +8,6 @@ Windows esetében környezeti változót létre kell hozni:
 Linux alatt nodejs telepítése:
 ------------------------------
 
-fordítás forrásból:
--------------------
     sudo apt-get install gcc-4.8 g++-4.8
     /usr/bin könyvtárban le kell cserélni a g++ és gcc linkeket, hogy a 4.8-asra mutassanak (mc-vel egyszerű)
 
@@ -19,25 +17,7 @@ fordítás forrásból:
     ./configure
     make
     sudo make install
-
-vagy:
------
-
-    curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
-    sudo apt-get install -y nodejs npm
-
-vagy:
------
-    sudo apt-get update
-    sudo apt-get upgrade
-    sudo su -
-    cd /opt
-    wget http://nodejs.org/dist/latest-v6.x/node-v6.1.0-linux-armv6l.tar.xz
-    tar xvzf node-v6.1.0-linux-armv6l.tar.xz
-    ln -s node-v6.1.0-linux-armv6l node
-    chmod a+rw /opt/node/lib/node_modules
-    chmod a+rw /opt/node/bin
-    echo 'PATH=$PATH:/opt/node/bin' > /etc/profile.d/node.sh
+    export NODE_PATH=/usr/local/lib/node_modules
 
 Modulok:
 --------
@@ -47,4 +27,4 @@ Modulok:
 
 
     npm install -g node-gyp
-    npm install -g serialport
+    npm install -g serialport (linux alatt: sudo npm install -g --unsafe-perm serialport)
