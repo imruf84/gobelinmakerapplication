@@ -32,6 +32,8 @@ var DeviceManager = (function () {
             }
             counter = ports.length;
             ports.forEach(function (port) {
+                if (port.comName == "ttyAMA0")
+                    return;
                 var sp = new SerialPort(port.comName, {
                     baudrate: 9600,
                     parser: serialPort.parsers.readline('\n')
