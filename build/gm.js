@@ -17,22 +17,41 @@ var Device = (function () {
     };
     return Device;
 }());
+var Messages = (function () {
+    function Messages() {
+    }
+    Messages.log = function (msg) {
+        console.log(msg);
+    };
+    Messages.warn = function (msg) {
+        console.warn('WARNING: ' + msg);
+    };
+    Messages.error = function (msg) {
+        console.error('ERROR: ' + msg);
+    };
+    return Messages;
+}());
 var serialPort = require('serialport');
 var SerialPort = require('serialport').SerialPort;
 var DeviceManager = (function () {
     function DeviceManager() {
     }
-    DeviceManager.scanDevices = function (callback) {
-        console.log('Scanning devices...');
+    DeviceManager.scanDevices = function (callback, nofound) {
+        Messages.log('Scanning devices...');
         var counter = 0;
+        var found = 0;
+        setTimeout(function () {
+            if (!(found > 0))
+                nofound();
+        }, 5000);
         serialPort.list(function (err, ports) {
             if (err) {
-                console.error(err);
+                Messages.error(err);
                 return;
             }
             counter = ports.length;
             ports.forEach(function (port) {
-                if (port.comName == "ttyAMA0")
+                if (port.comName.startsWith('ttyAMA'))
                     return;
                 var sp = new SerialPort(port.comName, {
                     baudrate: 9600,
@@ -43,26 +62,27 @@ var DeviceManager = (function () {
                         if (!data.toString().startsWith('deviceID:'))
                             return;
                         var deviceID = data.toString().replace('deviceID:', '');
-                        console.log('Device found at ' + sp.path + ' with ID: ' + deviceID);
+                        Messages.log('Device found at ' + sp.path + ' with ID: ' + deviceID);
                         DeviceManager.addDevice(new Device(deviceID, sp));
                         counter--;
+                        found++;
                         if (!(counter > 0))
                             callback();
                     });
                     sp.on('error', function (err) {
-                        console.error(err);
+                        Messages.error(err);
                         return;
                     });
                 });
                 sp.open(function (err) {
                     if (err) {
-                        console.error(err);
+                        Messages.error(err);
                         return;
                     }
                     setTimeout(function () {
                         sp.write('getDeviceID\n', function (err, res) {
                             if (err) {
-                                console.error(err);
+                                Messages.error('ERROR:' + err);
                                 return;
                             }
                         });
@@ -77,9 +97,17 @@ var DeviceManager = (function () {
     DeviceManager.addDevice = function (device) {
         DeviceManager.devices[device.getID()] = device;
     };
+    DeviceManager.getDevicesCount = function () {
+        var count = 0;
+        for (var key in DeviceManager.getDevicesContainer())
+            count++;
+        return count;
+    };
     DeviceManager.devices = {};
     return DeviceManager;
 }());
 DeviceManager.scanDevices(function () {
-    console.log('Device scanning finished.');
+    Messages.log('Device scanning finished.');
+}, function () {
+    Messages.warn("No connected devices found.");
 });

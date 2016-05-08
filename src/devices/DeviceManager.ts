@@ -1,4 +1,5 @@
 /// <reference path="Device.ts"/>
+/// <reference path="../messages/Messages.ts"/>
 
 declare function require(s: string);
 
@@ -27,17 +28,24 @@ class DeviceManager {
      * Eszközök keresése.
      * 
      * @param callback keresés befejezésének az eseménye
+     * @param nofound keresés befejezésének az eseménye
      */
-    public static scanDevices(callback: () => void) {
+    public static scanDevices(callback: () => void, nofound: () => void) {
 
-        console.log('Scanning devices...');
-        var counter = 0;
+        Messages.log('Scanning devices...');
+        var counter: number = 0;
+        var found: number = 0;
+
+        // Ha adott idő után sem találunk eszközt, akkor jelezzük.
+        setTimeout(function () {
+            if (!(found > 0)) nofound();
+        }, 5000);
 
         // Portok listázása.
         serialPort.list(function (err, ports) {
             // Hiba esetén kilépünk.
             if (err) {
-                console.error(err);
+                Messages.error(err);
                 return;
             }
 
@@ -48,7 +56,7 @@ class DeviceManager {
             ports.forEach(function (port) {
 
                 // HACK: linux alatt hibát generál, ami nem okoz gondot csak kényelmetlen.
-                if (port.comName == "ttyAMA0") return;
+                if (port.comName.startsWith('ttyAMA')) return;
 
                 // Port létrehozása.
                 var sp = new SerialPort(port.comName, {
@@ -66,17 +74,19 @@ class DeviceManager {
 
                         // Egyébként tároljuk az eszközt.
                         var deviceID = data.toString().replace('deviceID:', '');
-                        console.log('Device found at ' + sp.path + ' with ID: ' + deviceID);
+                        Messages.log('Device found at ' + sp.path + ' with ID: ' + deviceID);
                         DeviceManager.addDevice(new Device(deviceID, sp));
 
                         // Csökkentjük a felderítendő eszközök számát.
                         counter--;
+                        // Megtalált eszközök számának a növelése.
+                        found++;
                         // Ha nincs több felderítendő eszköz akkor eseménnyel jelezzük.
                         if (!(counter > 0)) callback();
                     });
 
                     sp.on('error', function (err) {
-                        console.error(err);
+                        Messages.error(err);
                         return;
                     });
                 });
@@ -84,7 +94,7 @@ class DeviceManager {
                 // Port megnyitása.
                 sp.open(function (err) {
                     if (err) {
-                        console.error(err);
+                        Messages.error(err);
                         return;
                     }
 
@@ -94,7 +104,7 @@ class DeviceManager {
                         sp.write('getDeviceID\n', function (err, res) {
                             // Hiba esetén kilépünk.
                             if (err) {
-                                console.error(err);
+                                Messages.error('ERROR:' + err);
                                 return;
                             }
                         });
@@ -121,5 +131,12 @@ class DeviceManager {
      */
     public static addDevice(device: Device) {
         DeviceManager.devices[device.getID()] = device;
+    }
+
+    public static getDevicesCount(): number {
+        var count: number = 0;
+        for (var key in DeviceManager.getDevicesContainer()) count++;
+
+        return count;
     }
 }

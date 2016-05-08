@@ -17,14 +17,12 @@ Linux alatt nodejs telepítése:
     ./configure
     make
     sudo make install
+    
+    .bashrc fájl utolsó sorába beszúrni:
     export NODE_PATH=/usr/local/lib/node_modules
 
 Modulok:
 --------
-    sudo npm config set strict-ssl false (csak linux alatt kell, mert nem találja meg a repositorit)
-    vagy
-    npm config set registry http://registry.npmjs.org/ (ez a jobb)
-
-
-    npm install -g node-gyp
+    npm install -g node-gyp (elvileg nem szükséges)
     npm install -g serialport (linux alatt: sudo npm install -g --unsafe-perm serialport)
+    npm install -g express
