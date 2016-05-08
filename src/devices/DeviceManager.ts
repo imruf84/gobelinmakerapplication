@@ -3,9 +3,6 @@
 
 declare function require(s: string);
 
-var serialPort = require('serialport');
-var SerialPort = require('serialport').SerialPort;
-
 /**
  * Eszközök tárolójának típusa.
  */
@@ -31,6 +28,9 @@ class DeviceManager {
      * @param nofound keresés befejezésének az eseménye
      */
     public static scanDevices(callback: () => void, nofound: () => void) {
+
+        var serialPort = require('serialport');
+        var SerialPort = require('serialport').SerialPort;
 
         Messages.log('Scanning devices...');
         var counter: number = 0;

@@ -31,12 +31,12 @@ var Messages = (function () {
     };
     return Messages;
 }());
-var serialPort = require('serialport');
-var SerialPort = require('serialport').SerialPort;
 var DeviceManager = (function () {
     function DeviceManager() {
     }
     DeviceManager.scanDevices = function (callback, nofound) {
+        var serialPort = require('serialport');
+        var SerialPort = require('serialport').SerialPort;
         Messages.log('Scanning devices...');
         var counter = 0;
         var found = 0;
@@ -106,8 +106,48 @@ var DeviceManager = (function () {
     DeviceManager.devices = {};
     return DeviceManager;
 }());
-DeviceManager.scanDevices(function () {
-    Messages.log('Device scanning finished.');
-}, function () {
-    Messages.warn("No connected devices found.");
-});
+var Server = (function () {
+    function Server(port, callback) {
+        this.port = -1;
+        this.port = port;
+        var express = require('express');
+        var app = express();
+        app.get('/:param', function (req, res) {
+            res.send('Hello World! ' + req.params.param);
+        });
+        app.listen(port, callback);
+    }
+    Server.prototype.getPort = function () {
+        return this.port;
+    };
+    return Server;
+}());
+var commandLineArgs = require('command-line-args');
+var cli = commandLineArgs([
+    { name: 'verbose', alias: 'v', type: Boolean },
+    { name: 'src', type: String, multiple: true, defaultOption: true },
+    { name: 'timeout', alias: 't', type: Number }
+]);
+console.log(cli.getUsage());
+var isConnectToDevices = !true;
+var isCreateHttpServer = !true;
+var isHttpServerCreated = false;
+if (isConnectToDevices) {
+    DeviceManager.scanDevices(function () {
+        Messages.log('Device scanning finished.');
+        createHttpServer();
+    }, function () {
+        Messages.warn("No connected devices found.");
+        createHttpServer();
+    });
+}
+var createHttpServer = function () {
+    if (isCreateHttpServer) {
+        var server = new Server(3000, function () {
+            isHttpServerCreated = true;
+            Messages.log('HTTP server listening on port ' + server.getPort() + '.');
+        });
+    }
+};
+if (isCreateHttpServer && !isConnectToDevices && !isHttpServerCreated)
+    createHttpServer();
