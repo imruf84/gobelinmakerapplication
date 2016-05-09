@@ -122,15 +122,30 @@ var Server = (function () {
     };
     return Server;
 }());
+var Utils = (function () {
+    function Utils() {
+    }
+    Utils.keys = function (obj) {
+        var r = new Array();
+        for (var k in obj)
+            r.push(k);
+        return r;
+    };
+    return Utils;
+}());
 var commandLineArgs = require('command-line-args');
 var cli = commandLineArgs([
-    { name: 'verbose', alias: 'v', type: Boolean },
-    { name: 'src', type: String, multiple: true, defaultOption: true },
-    { name: 'timeout', alias: 't', type: Number }
+    { name: 'help', alias: 'h', type: Boolean },
+    { name: 'server', alias: 's', type: Boolean },
+    { name: 'devices', alias: 'd', type: Boolean }
 ]);
-console.log(cli.getUsage());
-var isConnectToDevices = !true;
-var isCreateHttpServer = !true;
+var options = cli.parse(process.argv);
+if (!(Utils.keys(options).length > 0) || options.help) {
+    Messages.log(cli.getUsage());
+    process.exit(1);
+}
+var isConnectToDevices = options.devices;
+var isCreateHttpServer = options.server;
 var isHttpServerCreated = false;
 if (isConnectToDevices) {
     DeviceManager.scanDevices(function () {

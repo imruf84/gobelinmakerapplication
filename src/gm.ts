@@ -1,20 +1,29 @@
 /// <reference path="devices/DeviceManager.ts"/>
 /// <reference path="server/Server.ts"/>
+/// <reference path="utils/Utils.ts"/>
+
+declare var process;
 
 // Parancssori argumentumok lekérdezése.
 var commandLineArgs = require('command-line-args');
- 
+
 var cli = commandLineArgs([
-  { name: 'verbose', alias: 'v', type: Boolean },
-  { name: 'src', type: String, multiple: true, defaultOption: true },
-  { name: 'timeout', alias: 't', type: Number }
+    { name: 'help', alias: 'h', type: Boolean },
+    { name: 'server', alias: 's', type: Boolean },
+    { name: 'devices', alias: 'd', type: Boolean }
 ]);
-console.log(cli.getUsage());
+
+var options = cli.parse(process.argv);
+
+if (!(Utils.keys(options).length > 0) || options.help) {
+    Messages.log(cli.getUsage());
+    process.exit(1);
+}
 
 // Csatlakozás eszközökhöz.
-var isConnectToDevices: boolean = !true;
+var isConnectToDevices: boolean = options.devices;
 // HTTP szerver indítása.
-var isCreateHttpServer: boolean = !true;
+var isCreateHttpServer: boolean = options.server;
 // HTTP szerver létrehozása sikeres volt-e?
 var isHttpServerCreated: boolean = false;
 
