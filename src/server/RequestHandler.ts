@@ -100,6 +100,7 @@ class RequestHandler {
      * @param res válasz
      */
     protected writeBeforeHandle(req, res):void {
+        res.set({'Content-Type': 'text/html'});
         res.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><STYLE type="text/css">a {color:blue;text-decoration: underline;font-weight: bold;}</STYLE><title>' + this.getTitle() + '</title></head>');
         res.write('<body style="font-family: Arial">');
         this.writeBackLink(req, res);

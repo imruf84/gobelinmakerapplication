@@ -142,6 +142,7 @@ var RequestHandler = (function () {
         this.writeAfterHandle(req, res);
     };
     RequestHandler.prototype.writeBeforeHandle = function (req, res) {
+        res.set({ 'Content-Type': 'text/html' });
         res.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><STYLE type="text/css">a {color:blue;text-decoration: underline;font-weight: bold;}</STYLE><title>' + this.getTitle() + '</title></head>');
         res.write('<body style="font-family: Arial">');
         this.writeBackLink(req, res);
@@ -246,7 +247,7 @@ var createHttpServer = function () {
         var server = new Server(3000);
         var mmh = new MainMenuHandler();
         server.registerHandler(mmh);
-        server.registerHandler(new RequestHandler('/m1'));
+        server.registerHandler(new RequestHandler('/m1', 'Teszt menü 1', mmh));
         server.registerHandler(new RequestHandler('/m2', 'Teszt menü 2', mmh));
         server.registerHandler(new RequestHandler('/m3', 'Teszt menü 3', mmh));
         server.start(function () {
