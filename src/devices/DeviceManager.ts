@@ -13,7 +13,7 @@ class DeviceManager {
     /**
      * Eszközök tárolója.
      */
-    private static devices:Map<string, Device> = new Map<string, Device>();
+    private static devices: Map<string, Device> = new Map<string, Device>();
 
     /**
      * Eszközök keresése.
