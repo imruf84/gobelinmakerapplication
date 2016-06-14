@@ -36,6 +36,94 @@ var Messages = (function () {
     };
     return Messages;
 }());
+var KeyValuePair = (function () {
+    function KeyValuePair(key, value) {
+        this.key = key;
+        this.value = value;
+    }
+    return KeyValuePair;
+}());
+var Map = (function () {
+    function Map() {
+        this.keyAndValues = [];
+    }
+    Map.prototype.getKeysOfValue = function (value) {
+        var keysToReturn = [];
+        var valueToFind = value;
+        this.keyAndValues.forEach(function (value, index, array) {
+            if (value.value === valueToFind) {
+                keysToReturn.push(value.key);
+            }
+        });
+        return keysToReturn;
+    };
+    Map.prototype.clear = function () {
+        this.keyAndValues = [];
+    };
+    Map.prototype.delete = function (key) {
+        var found = false;
+        this.keyAndValues.forEach(function (value, index, array) {
+            if (found)
+                return;
+            if (key === value.key) {
+                array = array.slice(0, index).concat(array.slice(index + 1));
+                found = true;
+            }
+        });
+        return found;
+    };
+    Map.prototype.forEach = function (callbackfn, thisArg) {
+        this.keyAndValues.forEach(function (value, index, array) {
+            callbackfn.apply(thisArg, [value.value, value.key, this]);
+        }, this);
+    };
+    Map.prototype.get = function (key) {
+        var valueToReturn = undefined;
+        this.keyAndValues.forEach(function (value, index, array) {
+            if (valueToReturn !== undefined)
+                return;
+            if (key === value.key) {
+                valueToReturn = value.value;
+            }
+        });
+        return valueToReturn;
+    };
+    Map.prototype.has = function (key) {
+        var found = false;
+        this.keyAndValues.forEach(function (value, index, array) {
+            if (found)
+                return;
+            if (key === value.key) {
+                found = true;
+            }
+        });
+        return found;
+    };
+    Map.prototype.set = function (key, value) {
+        var found = false;
+        var valueToSet = value;
+        this.keyAndValues.forEach(function (value, index, array) {
+            if (found)
+                return;
+            if (key === value.key) {
+                found = true;
+                value.value = valueToSet;
+            }
+        });
+        if (!found) {
+            this.keyAndValues.push(new KeyValuePair(key, valueToSet));
+        }
+        return this;
+    };
+    Object.defineProperty(Map.prototype, "size", {
+        get: function () {
+            return this.keyAndValues.length;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    return Map;
+}());
 var DeviceManager = (function () {
     function DeviceManager() {
     }
@@ -68,7 +156,7 @@ var DeviceManager = (function () {
                             return;
                         var deviceID = data.toString().replace('deviceID:', '');
                         Messages.log('Device found at ' + sp.path + ' with ID: ' + deviceID);
-                        DeviceManager.addDevice(new Device(deviceID, sp));
+                        DeviceManager.devices.set(deviceID, new Device(deviceID, sp));
                         counter--;
                         found++;
                         if (!(counter > 0))
@@ -96,19 +184,7 @@ var DeviceManager = (function () {
             });
         });
     };
-    DeviceManager.getDevicesContainer = function () {
-        return DeviceManager.devices;
-    };
-    DeviceManager.addDevice = function (device) {
-        DeviceManager.devices[device.getID()] = device;
-    };
-    DeviceManager.getDevicesCount = function () {
-        var count = 0;
-        for (var key in DeviceManager.getDevicesContainer())
-            count++;
-        return count;
-    };
-    DeviceManager.devices = {};
+    DeviceManager.devices = new Map();
     return DeviceManager;
 }());
 var RequestHandler = (function () {

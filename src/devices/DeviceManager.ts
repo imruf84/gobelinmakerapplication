@@ -1,14 +1,9 @@
 /// <reference path="Device.ts"/>
 /// <reference path="../messages/Messages.ts"/>
+/// <reference path="../utils/Collections.ts"/>
 
 declare function require(s: string);
 
-/**
- * Eszközök tárolójának típusa.
- */
-interface DevicesContainer {
-    [ID: string]: Device;
-}
 
 /**
  * Eszközök kezelője.
@@ -18,8 +13,7 @@ class DeviceManager {
     /**
      * Eszközök tárolója.
      */
-    private static devices: DevicesContainer = {};
-
+    private static devices:Map<string, Device> = new Map<string, Device>();
 
     /**
      * Eszközök keresése.
@@ -75,7 +69,7 @@ class DeviceManager {
                         // Egyébként tároljuk az eszközt.
                         var deviceID = data.toString().replace('deviceID:', '');
                         Messages.log('Device found at ' + sp.path + ' with ID: ' + deviceID);
-                        DeviceManager.addDevice(new Device(deviceID, sp));
+                        DeviceManager.devices.set(deviceID, new Device(deviceID, sp));
 
                         // Csökkentjük a felderítendő eszközök számát.
                         counter--;
@@ -113,30 +107,5 @@ class DeviceManager {
 
             });
         });
-    }
-
-    /**
-     * Eszközök tárolójának a lekérdezése.
-     * 
-     * @return eszközök tárolója
-     */
-    public static getDevicesContainer(): DevicesContainer {
-        return DeviceManager.devices;
-    }
-
-    /**
-     * Eszköz hozzáadása.
-     * 
-     * @param device eszköz
-     */
-    public static addDevice(device: Device) {
-        DeviceManager.devices[device.getID()] = device;
-    }
-
-    public static getDevicesCount(): number {
-        var count: number = 0;
-        for (var key in DeviceManager.getDevicesContainer()) count++;
-
-        return count;
     }
 }
