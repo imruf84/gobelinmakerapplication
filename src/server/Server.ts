@@ -53,8 +53,9 @@ class Server {
      * 
      * @param handler kezelő
      */
-    public registerHandler(handler: RequestHandler): void {
+    public registerHandler(handler: RequestHandler): RequestHandler {
         this.expressApp.get(handler.getPath(), function (req, res) { handler.getHandler(req, res); });
+        return handler;
     }
 
     /**

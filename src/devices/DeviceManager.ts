@@ -64,11 +64,11 @@ class DeviceManager {
                     sp.on('data', function (data) {
 
                         // Ha az üzenet nem eszközazonosító, akkor kilépünk.
-                        if (!data.toString().startsWith('deviceID:')) return;
+                        if (!data.toString().startsWith('deviceIDs:')) return;
 
                         // Egyébként tároljuk az eszközt.
-                        var deviceID = data.toString().replace('deviceID:', '');
-                        Messages.log('Device found at ' + sp.path + ' with ID: ' + deviceID);
+                        var deviceID = data.toString().replace('deviceIDs:', '');
+                        Messages.log('Device(s) found at ' + sp.path + ' with IDs: ' + deviceID);
                         DeviceManager.devices.set(deviceID, new Device(deviceID, sp));
 
                         // Csökkentjük a felderítendő eszközök számát.
@@ -95,7 +95,7 @@ class DeviceManager {
                     // Várunk egy kicsit az üzenet küldése előtt (idő kell az eszköznek a bootoláshoz).
                     setTimeout(function () {
                         // Eszköz azonosítójának a lekérdezése.
-                        sp.write('getDeviceID\n', function (err, res) {
+                        sp.write('getDeviceIDs\n', function (err, res) {
                             // Hiba esetén kilépünk.
                             if (err) {
                                 Messages.error('ERROR:' + err);

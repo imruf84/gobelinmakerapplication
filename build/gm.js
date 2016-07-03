@@ -152,10 +152,10 @@ var DeviceManager = (function () {
                 }, false);
                 sp.on('open', function () {
                     sp.on('data', function (data) {
-                        if (!data.toString().startsWith('deviceID:'))
+                        if (!data.toString().startsWith('deviceIDs:'))
                             return;
-                        var deviceID = data.toString().replace('deviceID:', '');
-                        Messages.log('Device found at ' + sp.path + ' with ID: ' + deviceID);
+                        var deviceID = data.toString().replace('deviceIDs:', '');
+                        Messages.log('Device(s) found at ' + sp.path + ' with IDs: ' + deviceID);
                         DeviceManager.devices.set(deviceID, new Device(deviceID, sp));
                         counter--;
                         found++;
@@ -173,7 +173,7 @@ var DeviceManager = (function () {
                         return;
                     }
                     setTimeout(function () {
-                        sp.write('getDeviceID\n', function (err, res) {
+                        sp.write('getDeviceIDs\n', function (err, res) {
                             if (err) {
                                 Messages.error('ERROR:' + err);
                                 return;
@@ -278,6 +278,7 @@ var Server = (function () {
     };
     Server.prototype.registerHandler = function (handler) {
         this.expressApp.get(handler.getPath(), function (req, res) { handler.getHandler(req, res); });
+        return handler;
     };
     Server.prototype.start = function (callback) {
         this.expressApp.listen(this.getPort(), callback);
