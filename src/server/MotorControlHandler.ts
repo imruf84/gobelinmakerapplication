@@ -10,16 +10,22 @@ class MotorControlHandler extends RequestHandler {
         super('/motorcontrol', 'Motorvezérlő', parent);
     }
 
-    protected handle(req, res): void {
-
+    protected beforeHandle(req, res): boolean {
         // Ha vannak paraméterek, akkor végrehajtjuk az utasítást...
         if (Utils.keys(req.body).length > 0) {
             
             // ...majd frissítjük az oldalt (hogy minden post adat eltűnjön).
             // HACK: - ez azért kell, hogy az oldal bármikor frissíthető legyen a 'biztosan elhagyja az oldalt' figyelmeztetés nélkül
-            this.refresh(res);
-            return;
+            //this.refresh(res);
+            console.log(req.body);
+            res.redirect(this.getPath());
+            return true;
         }
+
+        return false;
+    };
+
+    protected handle(req, res): void {
 
         // Megjelenítjük az űrlapot. 
         res.write('<br><br>');

@@ -107,6 +107,8 @@ class RequestHandler {
      * @param res válasz
      */
     public getHandler(req, res): void {
+        if (this.beforeHandle(req, res)) return;
+
         this.writeBeforeHandle(req, res);
         this.handle(req, res);
         this.writeAfterHandle(req, res);
@@ -190,4 +192,13 @@ class RequestHandler {
      * @param res válasz
      */
     protected handle(req, res): void { };
+
+    /**
+     * Kiszolgálás előtti esemény.
+     * 
+     * @param req kérés
+     * @param res válasz
+     * @return hamis esetén lefutnak a további események is, igaz esetén nem
+     */
+    protected beforeHandle(req, res): boolean {return false;};
 }

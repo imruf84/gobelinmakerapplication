@@ -219,6 +219,8 @@ var RequestHandler = (function () {
         return this.title;
     };
     RequestHandler.prototype.getHandler = function (req, res) {
+        if (this.beforeHandle(req, res))
+            return;
         this.writeBeforeHandle(req, res);
         this.handle(req, res);
         this.writeAfterHandle(req, res);
@@ -254,6 +256,8 @@ var RequestHandler = (function () {
     };
     RequestHandler.prototype.handle = function (req, res) { };
     ;
+    RequestHandler.prototype.beforeHandle = function (req, res) { return false; };
+    ;
     return RequestHandler;
 }());
 var MainMenuHandler = (function (_super) {
@@ -284,11 +288,16 @@ var MotorControlHandler = (function (_super) {
     function MotorControlHandler(parent) {
         _super.call(this, '/motorcontrol', 'Motorvezérlő', parent);
     }
-    MotorControlHandler.prototype.handle = function (req, res) {
+    MotorControlHandler.prototype.beforeHandle = function (req, res) {
         if (Utils.keys(req.body).length > 0) {
-            this.refresh(res);
-            return;
+            console.log(req.body);
+            res.redirect(this.getPath());
+            return true;
         }
+        return false;
+    };
+    ;
+    MotorControlHandler.prototype.handle = function (req, res) {
         res.write('<br><br>');
         res.write('<form action="' + this.getPath() + '" method="post">' +
             ' X: <input type="number" name="MOTOR_X" value="0">' +
