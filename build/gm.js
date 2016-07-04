@@ -196,7 +196,7 @@ var RequestHandler = (function () {
         this.setParent(parent);
     }
     RequestHandler.prototype.redirect = function (res, path) {
-        res.write('<script type="text/javascript">window.location="' + path + '"</script>');
+        res.write('<script type="text/javascript">document.location="' + path + '"</script>');
     };
     RequestHandler.prototype.refresh = function (res) {
         this.redirect(res, this.getPath());

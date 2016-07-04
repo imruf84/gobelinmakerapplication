@@ -41,7 +41,7 @@ class RequestHandler {
      * @param path új oldal
      */
     public redirect(res, path: string): void {
-        res.write('<script type="text/javascript">window.location="' + path + '"</script>');
+        res.write('<script type="text/javascript">document.location="' + path + '"</script>');
     }
 
     /**
