@@ -37,6 +37,19 @@ void Motor::doAction(String action)
     return;
   }
 
+  // Adott szöggel való elfordulás végrehajtása.
+  if (action.startsWith("dm:angle|"))
+  {
+    int angle;
+    sscanf(action.c_str(), "dm:angle|%[^'|']|%d", NULL, &angle);
+
+    // Parancs végrehajtása.
+    stepper->move((int)((float)MOTOR_STEPS_PER_ONE_TURN*((float)angle / 360.0f)));
+
+    isRunning = true;
+    return;
+  }
+
 }
 
 void Motor::doLoop()
@@ -53,9 +66,9 @@ void Motor::doLoop()
 void Motor::finishAction()
 {
   isRunning = false;
-  Serial.print(getDeviceID());
-  Serial.print(":");
-  Serial.println("finished");
+  Serial.print("dm:");
+  Serial.print("finished|");
+  Serial.println(getDeviceID());
 }
 
 AccelStepper* Motor::getStepper()

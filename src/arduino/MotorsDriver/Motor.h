@@ -17,6 +17,7 @@ class Motor: public Device
     AccelStepper* getStepper();
     // dm:steps|MOTOR_X|100 (100 lépést tesz meg a 'MOTOR_X')
     // dm:turns|MOTOR_X|1   (1 teljes kört tesz meg a 'MOTOR_X')
+    // dm:angle|MOTOR_X|90  (90 fokos szöget fordul el a 'MOTOR_X')
     virtual void doAction(String action);
     virtual void doLoop();
     virtual bool isFinished();

@@ -1,4 +1,5 @@
 /// <reference path="MainMenuHandler.ts"/>
+/// <reference path="MotorControlHandler.ts"/>
 
 declare function require(s: string);
 
@@ -27,7 +28,10 @@ class Server {
 
         // Szerver létrehozása.
         var express = require('express');
+        var bodyParser = require("body-parser");
         this.expressApp = express();
+        this.expressApp.use(bodyParser.urlencoded({extended: false}));
+        this.expressApp.use(bodyParser.json());
     }
 
     /**
@@ -55,6 +59,7 @@ class Server {
      */
     public registerHandler(handler: RequestHandler): RequestHandler {
         this.expressApp.get(handler.getPath(), function (req, res) { handler.getHandler(req, res); });
+        this.expressApp.post(handler.getPath(), function (req, res) { handler.getHandler(req, res); });
         return handler;
     }
 

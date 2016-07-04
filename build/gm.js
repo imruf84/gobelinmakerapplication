@@ -157,7 +157,6 @@ var DeviceManager = (function () {
                         var deviceID = data.toString().replace('deviceIDs:', '');
                         Messages.log('Device(s) found at ' + sp.path + ' with IDs: ' + deviceID);
                         DeviceManager.devices.set(deviceID, new Device(deviceID, sp));
-                        counter--;
                         found++;
                         if (!(counter > 0))
                             callback();
@@ -168,6 +167,7 @@ var DeviceManager = (function () {
                     });
                 });
                 sp.open(function (err) {
+                    counter--;
                     if (err) {
                         Messages.error(err);
                         return;
@@ -195,6 +195,12 @@ var RequestHandler = (function () {
         this.title = title;
         this.setParent(parent);
     }
+    RequestHandler.prototype.redirect = function (res, path) {
+        res.write('<script type="text/javascript">window.location="' + path + '"</script>');
+    };
+    RequestHandler.prototype.refresh = function (res) {
+        this.redirect(res, this.getPath());
+    };
     RequestHandler.prototype.addHandler = function (rh) {
         this.handlers.push(rh);
     };
@@ -262,29 +268,6 @@ var MainMenuHandler = (function (_super) {
     ;
     return MainMenuHandler;
 }(RequestHandler));
-var Server = (function () {
-    function Server(port) {
-        this.port = -1;
-        this.expressApp = null;
-        this.port = port;
-        var express = require('express');
-        this.expressApp = express();
-    }
-    Server.prototype.getPort = function () {
-        return this.port;
-    };
-    Server.prototype.getExpressApp = function () {
-        return this.expressApp;
-    };
-    Server.prototype.registerHandler = function (handler) {
-        this.expressApp.get(handler.getPath(), function (req, res) { handler.getHandler(req, res); });
-        return handler;
-    };
-    Server.prototype.start = function (callback) {
-        this.expressApp.listen(this.getPort(), callback);
-    };
-    return Server;
-}());
 var Utils = (function () {
     function Utils() {
     }
@@ -295,6 +278,52 @@ var Utils = (function () {
         return r;
     };
     return Utils;
+}());
+var MotorControlHandler = (function (_super) {
+    __extends(MotorControlHandler, _super);
+    function MotorControlHandler(parent) {
+        _super.call(this, '/motorcontrol', 'Motorvezérlő', parent);
+    }
+    MotorControlHandler.prototype.handle = function (req, res) {
+        if (Utils.keys(req.body).length > 0) {
+            this.refresh(res);
+            return;
+        }
+        res.write('<br><br>');
+        res.write('<form action="' + this.getPath() + '" method="post">' +
+            ' X: <input type="number" name="MOTOR_X" value="0">' +
+            ' <br><br><input type="submit" value="Elküld">' +
+            '</form>');
+    };
+    ;
+    return MotorControlHandler;
+}(RequestHandler));
+var Server = (function () {
+    function Server(port) {
+        this.port = -1;
+        this.expressApp = null;
+        this.port = port;
+        var express = require('express');
+        var bodyParser = require("body-parser");
+        this.expressApp = express();
+        this.expressApp.use(bodyParser.urlencoded({ extended: false }));
+        this.expressApp.use(bodyParser.json());
+    }
+    Server.prototype.getPort = function () {
+        return this.port;
+    };
+    Server.prototype.getExpressApp = function () {
+        return this.expressApp;
+    };
+    Server.prototype.registerHandler = function (handler) {
+        this.expressApp.get(handler.getPath(), function (req, res) { handler.getHandler(req, res); });
+        this.expressApp.post(handler.getPath(), function (req, res) { handler.getHandler(req, res); });
+        return handler;
+    };
+    Server.prototype.start = function (callback) {
+        this.expressApp.listen(this.getPort(), callback);
+    };
+    return Server;
 }());
 var commandLineArgs = require('command-line-args');
 var cli = commandLineArgs([
@@ -324,9 +353,7 @@ var createHttpServer = function () {
         var server = new Server(3000);
         var mmh = new MainMenuHandler();
         server.registerHandler(mmh);
-        server.registerHandler(new RequestHandler('/m1', 'Teszt menü 1', mmh));
-        server.registerHandler(new RequestHandler('/m2', 'Teszt menü 2', mmh));
-        server.registerHandler(new RequestHandler('/m3', 'Teszt menü 3', mmh));
+        server.registerHandler(new MotorControlHandler(mmh));
         server.start(function () {
             isHttpServerCreated = true;
             Messages.log('HTTP server listening on port ' + server.getPort() + '.');

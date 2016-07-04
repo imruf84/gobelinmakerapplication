@@ -71,10 +71,9 @@ class DeviceManager {
                         Messages.log('Device(s) found at ' + sp.path + ' with IDs: ' + deviceID);
                         DeviceManager.devices.set(deviceID, new Device(deviceID, sp));
 
-                        // Csökkentjük a felderítendő eszközök számát.
-                        counter--;
                         // Megtalált eszközök számának a növelése.
                         found++;
+
                         // Ha nincs több felderítendő eszköz akkor eseménnyel jelezzük.
                         if (!(counter > 0)) callback();
                     });
@@ -87,6 +86,10 @@ class DeviceManager {
 
                 // Port megnyitása.
                 sp.open(function (err) {
+                    
+                    // Csökkentjük a felderítendő eszközök számát.
+                    counter--;
+                    
                     if (err) {
                         Messages.error(err);
                         return;

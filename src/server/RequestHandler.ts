@@ -35,6 +35,25 @@ class RequestHandler {
     }
 
     /**
+     * Átirányítás adott oldalra.
+     * 
+     * @param res válasz objektum
+     * @param path új oldal
+     */
+    public redirect(res, path: string): void {
+        res.write('<script type="text/javascript">window.location="' + path + '"</script>');
+    }
+
+    /**
+     * Oldal frissítése.
+     * 
+     * @param res válasz objektum
+     */
+    public refresh(res): void {
+        this.redirect(res, this.getPath());
+    }
+
+    /**
      * Kezelő hozzáadása.
      * 
      * @param rh kezelő
@@ -58,7 +77,7 @@ class RequestHandler {
      * 
      * @return szülő
      */
-    public getParent() {
+    public getParent(): RequestHandler {
         return this.parent;
 
     }
