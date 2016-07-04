@@ -22,6 +22,21 @@ var Device = (function () {
     };
     return Device;
 }());
+var DeviceAction = (function () {
+    function DeviceAction(deviceID, action, params, callback) {
+        this.deviceID = deviceID;
+        this.action = action;
+        this.params = params;
+        this.callback = callback;
+    }
+    DeviceAction.prototype.getDeviceID = function () {
+        return this.deviceID;
+    };
+    DeviceAction.prototype.toString = function () {
+        return 'dm:' + this.action + '|' + this.deviceID + (this.params ? '|' + this.params.join('|') : '');
+    };
+    return DeviceAction;
+}());
 var Messages = (function () {
     function Messages() {
     }
@@ -127,7 +142,7 @@ var Map = (function () {
 var DeviceManager = (function () {
     function DeviceManager() {
     }
-    DeviceManager.scanDevices = function (callback, nofound) {
+    DeviceManager.scanDevices = function (timeout, callback, nofound) {
         var serialPort = require('serialport');
         var SerialPort = require('serialport').SerialPort;
         Messages.log('Scanning devices...');
@@ -156,7 +171,7 @@ var DeviceManager = (function () {
                             return;
                         var deviceID = data.toString().replace('deviceIDs:', '');
                         Messages.log('Device(s) found at ' + sp.path + ' with IDs: ' + deviceID);
-                        DeviceManager.devices.set(deviceID, new Device(deviceID, sp));
+                        DeviceManager.storeDeviceByIDs(deviceID.split(';'), new Device(deviceID, sp));
                         found++;
                         if (!(counter > 0))
                             callback();
@@ -179,10 +194,24 @@ var DeviceManager = (function () {
                                 return;
                             }
                         });
-                    }, 2000);
+                    }, timeout);
                 });
             });
         });
+    };
+    DeviceManager.storeDeviceByIDs = function (IDs, device) {
+        for (var ID in IDs) {
+            DeviceManager.devices.set(ID, device);
+        }
+    };
+    DeviceManager.getDeviceByID = function (ID) {
+        return DeviceManager.devices.get(ID);
+    };
+    DeviceManager.doAction = function (action) {
+        var device = DeviceManager.getDeviceByID(action.getDeviceID());
+        if (null == device)
+            return;
+        console.log(action.toString());
     };
     DeviceManager.devices = new Map();
     return DeviceManager;
@@ -195,11 +224,8 @@ var RequestHandler = (function () {
         this.title = title;
         this.setParent(parent);
     }
-    RequestHandler.prototype.redirect = function (res, path) {
-        res.write('<script type="text/javascript">document.location="' + path + '"</script>');
-    };
     RequestHandler.prototype.refresh = function (res) {
-        this.redirect(res, this.getPath());
+        res.redirect(this.getPath());
     };
     RequestHandler.prototype.addHandler = function (rh) {
         this.handlers.push(rh);
@@ -219,8 +245,12 @@ var RequestHandler = (function () {
         return this.title;
     };
     RequestHandler.prototype.getHandler = function (req, res) {
-        if (this.beforeHandle(req, res))
-            return;
+        if (Utils.keys(req.body).length > 0) {
+            if (!this.postDataProcess(req, res, req.body)) {
+                this.refresh(res);
+                return;
+            }
+        }
         this.writeBeforeHandle(req, res);
         this.handle(req, res);
         this.writeAfterHandle(req, res);
@@ -238,7 +268,7 @@ var RequestHandler = (function () {
     RequestHandler.prototype.writeBackLink = function (req, res) {
         if (!this.getParent())
             return;
-        res.write('<a href="' + this.getParent().getPath() + '">< Vissza</a>');
+        res.write('<a href="' + this.getParent().getPath() + '">< Back</a>');
     };
     RequestHandler.prototype.writeTitle = function (req, res) {
         res.write('<center><h1>' + this.getTitle() + '</h1></center><br>');
@@ -256,7 +286,7 @@ var RequestHandler = (function () {
     };
     RequestHandler.prototype.handle = function (req, res) { };
     ;
-    RequestHandler.prototype.beforeHandle = function (req, res) { return false; };
+    RequestHandler.prototype.postDataProcess = function (req, res, data) { return false; };
     ;
     return RequestHandler;
 }());
@@ -286,23 +316,26 @@ var Utils = (function () {
 var MotorControlHandler = (function (_super) {
     __extends(MotorControlHandler, _super);
     function MotorControlHandler(parent) {
-        _super.call(this, '/motorcontrol', 'Motorvezérlő', parent);
+        _super.call(this, '/motorcontrol', 'Motor control', parent);
     }
-    MotorControlHandler.prototype.beforeHandle = function (req, res) {
-        if (Utils.keys(req.body).length > 0) {
-            console.log(req.body);
-            res.redirect(this.getPath());
-            return true;
+    MotorControlHandler.prototype.postDataProcess = function (req, res, data) {
+        var key;
+        key = 'MOTOR_X';
+        if (data[key]) {
+            var value = Number(data[key]);
+            DeviceManager.doAction(new DeviceAction(key, 'angle', [isNaN(value) ? 0 : value], function () { console.log(this.getDeviceID() + ' is finished.'); }));
         }
         return false;
     };
     ;
     MotorControlHandler.prototype.handle = function (req, res) {
         res.write('<br><br>');
-        res.write('<form action="' + this.getPath() + '" method="post">' +
+        res.write('<center>' +
+            '<form action="' + this.getPath() + '" method="post">' +
             ' X: <input type="number" name="MOTOR_X" value="0">' +
-            ' <br><br><input type="submit" value="Elküld">' +
-            '</form>');
+            ' <br><br><input type="submit" value="Send">' +
+            '</form>' +
+            '</center>');
     };
     ;
     return MotorControlHandler;
@@ -349,7 +382,7 @@ var isConnectToDevices = options.devices;
 var isCreateHttpServer = options.server;
 var isHttpServerCreated = false;
 if (isConnectToDevices) {
-    DeviceManager.scanDevices(function () {
+    DeviceManager.scanDevices(2000, function () {
         Messages.log('Device scanning finished.');
         createHttpServer();
     }, function () {

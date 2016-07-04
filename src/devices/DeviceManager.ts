@@ -1,4 +1,5 @@
 /// <reference path="Device.ts"/>
+/// <reference path="DeviceAction.ts"/>
 /// <reference path="../messages/Messages.ts"/>
 /// <reference path="../utils/Collections.ts"/>
 
@@ -18,10 +19,11 @@ class DeviceManager {
     /**
      * Eszközök keresése.
      * 
+     * @param timeout várakozási idő
      * @param callback keresés befejezésének az eseménye
      * @param nofound keresés befejezésének az eseménye
      */
-    public static scanDevices(callback: () => void, nofound: () => void) {
+    public static scanDevices(timeout: number, callback: () => void, nofound: () => void) {
 
         var serialPort = require('serialport');
         var SerialPort = require('serialport').SerialPort;
@@ -69,7 +71,7 @@ class DeviceManager {
                         // Egyébként tároljuk az eszközt.
                         var deviceID = data.toString().replace('deviceIDs:', '');
                         Messages.log('Device(s) found at ' + sp.path + ' with IDs: ' + deviceID);
-                        DeviceManager.devices.set(deviceID, new Device(deviceID, sp));
+                        DeviceManager.storeDeviceByIDs(deviceID.split(';'), new Device(deviceID, sp));
 
                         // Megtalált eszközök számának a növelése.
                         found++;
@@ -86,10 +88,10 @@ class DeviceManager {
 
                 // Port megnyitása.
                 sp.open(function (err) {
-                    
+
                     // Csökkentjük a felderítendő eszközök számát.
                     counter--;
-                    
+
                     if (err) {
                         Messages.error(err);
                         return;
@@ -105,10 +107,44 @@ class DeviceManager {
                                 return;
                             }
                         });
-                    }, 2000);
+                    }, timeout);
                 });
 
             });
         });
+    }
+
+    /**
+     * Eszközök tárolása különböző azonosítók szerint.
+     * 
+     * @param IDs azonosítók tömbje
+     * @param device eszköz
+     */
+    private static storeDeviceByIDs(IDs: [string], device: Device): void {
+        for (var ID in IDs) {
+            DeviceManager.devices.set(ID, device);
+        }
+    }
+
+    /**
+     * Eszköz lekérdezése azonosító alapján.
+     * 
+     * @param ID azonosító
+     */
+    public static getDeviceByID(ID: string): Device {
+        return DeviceManager.devices.get(ID);
+    }
+
+    /**
+     * Parancs végrehajtása.
+     * 
+     * @param action parancs
+     */
+    public static doAction(action: DeviceAction): void {
+
+        var device: Device = DeviceManager.getDeviceByID(action.getDeviceID());
+        if (null == device) return;
+
+        console.log(action.toString());
     }
 }

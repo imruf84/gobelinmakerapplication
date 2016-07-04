@@ -7,19 +7,19 @@
 class MotorControlHandler extends RequestHandler {
 
     constructor(parent: RequestHandler) {
-        super('/motorcontrol', 'Motorvezérlő', parent);
+        super('/motorcontrol', 'Motor control', parent);
     }
 
-    protected beforeHandle(req, res): boolean {
-        // Ha vannak paraméterek, akkor végrehajtjuk az utasítást...
-        if (Utils.keys(req.body).length > 0) {
-            
-            // ...majd frissítjük az oldalt (hogy minden post adat eltűnjön).
-            // HACK: - ez azért kell, hogy az oldal bármikor frissíthető legyen a 'biztosan elhagyja az oldalt' figyelmeztetés nélkül
-            //this.refresh(res);
-            console.log(req.body);
-            res.redirect(this.getPath());
-            return true;
+    protected postDataProcess(req, res, data): boolean {
+
+        var key: string;
+
+        key = 'MOTOR_X';
+        if (data[key]) {
+            var value: number = Number(data[key]);
+            DeviceManager.doAction(
+                new DeviceAction(key, 'angle', [isNaN(value) ? 0 : value], function(){console.log(this.getDeviceID() + ' is finished.');})
+            );
         }
 
         return false;
@@ -30,10 +30,12 @@ class MotorControlHandler extends RequestHandler {
         // Megjelenítjük az űrlapot. 
         res.write('<br><br>');
         res.write(
+            '<center>' + 
             '<form action="' + this.getPath() + '" method="post">' +
             ' X: <input type="number" name="MOTOR_X" value="0">' +
-            ' <br><br><input type="submit" value="Elküld">' +
-            '</form>'
+            ' <br><br><input type="submit" value="Send">' +
+            '</form>' +
+            '</center>'
         );
 
     };

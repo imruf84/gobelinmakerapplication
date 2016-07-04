@@ -29,7 +29,7 @@ var isHttpServerCreated: boolean = false;
 
 // Eszközök felderítése.
 if (isConnectToDevices) {
-    DeviceManager.scanDevices(
+    DeviceManager.scanDevices(2000, 
         function () {
             Messages.log('Device scanning finished.');
 

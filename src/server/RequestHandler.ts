@@ -35,22 +35,12 @@ class RequestHandler {
     }
 
     /**
-     * Átirányítás adott oldalra.
-     * 
-     * @param res válasz objektum
-     * @param path új oldal
-     */
-    public redirect(res, path: string): void {
-        res.write('<script type="text/javascript">document.location="' + path + '"</script>');
-    }
-
-    /**
      * Oldal frissítése.
      * 
      * @param res válasz objektum
      */
     public refresh(res): void {
-        this.redirect(res, this.getPath());
+        res.redirect(this.getPath());
     }
 
     /**
@@ -107,8 +97,19 @@ class RequestHandler {
      * @param res válasz
      */
     public getHandler(req, res): void {
-        if (this.beforeHandle(req, res)) return;
+        
+        // Ha vannak paraméterek, akkor végrehajtjuk az adatok feldolgozását.
+        if (Utils.keys(req.body).length > 0) {
+            
+            // ...majd frissítjük az oldalt (hogy minden post adat eltűnjön).
+            // HACK: - ez azért kell, hogy az oldal bármikor frissíthető legyen a 'biztosan elhagyja az oldalt' figyelmeztetés nélkül
+            if (!this.postDataProcess(req, res, req.body)) {
+                this.refresh(res);
+                return;
+            }
+        }
 
+        // Kérés normál kiszolgálása.
         this.writeBeforeHandle(req, res);
         this.handle(req, res);
         this.writeAfterHandle(req, res);
@@ -147,7 +148,7 @@ class RequestHandler {
     protected writeBackLink(req, res): void {
         if (!this.getParent()) return;
 
-        res.write('<a href="' + this.getParent().getPath() + '">< Vissza</a>');
+        res.write('<a href="' + this.getParent().getPath() + '">< Back</a>');
     }
 
     /**
@@ -194,11 +195,12 @@ class RequestHandler {
     protected handle(req, res): void { };
 
     /**
-     * Kiszolgálás előtti esemény.
+     * Kiszolgálás előtti lehetőség POST adatok feldolgozására.
      * 
      * @param req kérés
      * @param res válasz
-     * @return hamis esetén lefutnak a további események is, igaz esetén nem
+     * @param data adatok
+     * @return igaz esetén lefut a kérés további kiszolgálása, hamis esetén nem
      */
-    protected beforeHandle(req, res): boolean {return false;};
+    protected postDataProcess(req, res, data): boolean {return false;};
 }
