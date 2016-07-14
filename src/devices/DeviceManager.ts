@@ -2,6 +2,7 @@
 /// <reference path="DeviceAction.ts"/>
 /// <reference path="../messages/Messages.ts"/>
 /// <reference path="../utils/Collections.ts"/>
+/// <reference path="../utils/ReusableCounter.ts"/>
 
 declare function require(s: string);
 
@@ -15,6 +16,10 @@ class DeviceManager {
      * Eszközök tárolója.
      */
     private static devices: Map<string, Device> = new Map<string, Device>();
+    /**
+     * Kiadott parancsok tárolója.
+     */
+    private static startedActions: Map<number, Device> = new Map<number, Device>();
 
     /**
      * Eszközök keresése.
@@ -64,7 +69,7 @@ class DeviceManager {
                 sp.on('open', function () {
 
                     sp.on('data', function (data) {
-
+                        
                         // Ha az üzenet nem eszközazonosító, akkor kilépünk.
                         if (!data.toString().startsWith('deviceIDs:')) return;
 
@@ -121,9 +126,15 @@ class DeviceManager {
      * @param device eszköz
      */
     private static storeDeviceByIDs(IDs: [string], device: Device): void {
-        for (var ID in IDs) {
+        for (var key in IDs) {
+            var ID: string = IDs[key];
             DeviceManager.devices.set(ID, device);
         }
+
+        // Beállítjuk a későbbi munkához szükséges eseményt.
+        device.getSerialPort().on('data', function (data) {
+            console.log('result: ' + data);
+        });
     }
 
     /**
@@ -145,6 +156,18 @@ class DeviceManager {
         var device: Device = DeviceManager.getDeviceByID(action.getDeviceID());
         if (null == device) return;
 
-        console.log(action.toString());
+        var actionStr: string = action.toString() + '$' + ReusableCounter.generate() + '\n';
+
+        device.getSerialPort().write(
+            actionStr,
+            function (err, res) {
+                // Hiba esetén kilépünk.
+                if (err) {
+                    Messages.error('ERROR:' + err);
+                    return;
+                }
+            });
+
+        console.log('doAction: ' + Date.now() + " " + actionStr.replace('\n', ''));
     }
 }

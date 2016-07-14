@@ -9,16 +9,19 @@ Motor::Motor(String ID, uint8_t pin1, uint8_t pin2, uint8_t pin3, uint8_t pin4):
   stepper->setSpeed(1000);
 }
 
-void Motor::doAction(String action)
+void Motor::doAction(String action, uint16_t actionID)
 {
   // Adott számú lépés végrehajtása.
   if (action.startsWith("dm:steps|"))
   {
-    int steps;
-    sscanf(action.c_str(), "dm:steps|%[^'|']|%d", NULL, &steps);
+    long steps;
+    sscanf(action.c_str(), "dm:steps|%[^'|']|%ld", NULL, &steps);
 
     // Parancs végrehajtása.
-    stepper->move(steps);
+    moveSteps(steps);
+
+    // Parancs azonosító tárolása.
+    setActionID(actionID);
 
     isRunning = true;
     return;
@@ -27,11 +30,14 @@ void Motor::doAction(String action)
   // Adott számú teljes kör végrehajtása.
   if (action.startsWith("dm:turns|"))
   {
-    int rounds;
-    sscanf(action.c_str(), "dm:turns|%[^'|']|%d", NULL, &rounds);
+    long rounds;
+    sscanf(action.c_str(), "dm:turns|%[^'|']|%ld", NULL, &rounds);
 
     // Parancs végrehajtása.
-    stepper->move(rounds * MOTOR_STEPS_PER_ONE_TURN);
+    moveSteps(rounds * MOTOR_STEPS_PER_ONE_TURN);
+
+    // Parancs azonosító tárolása.
+    setActionID(actionID);
 
     isRunning = true;
     return;
@@ -40,11 +46,14 @@ void Motor::doAction(String action)
   // Adott szöggel való elfordulás végrehajtása.
   if (action.startsWith("dm:angle|"))
   {
-    int angle;
-    sscanf(action.c_str(), "dm:angle|%[^'|']|%d", NULL, &angle);
+    long angle;
+    sscanf(action.c_str(), "dm:angle|%[^'|']|%ld", NULL, &angle);
 
     // Parancs végrehajtása.
-    stepper->move((int)((float)MOTOR_STEPS_PER_ONE_TURN*((float)angle / 360.0f)));
+    moveSteps((MOTOR_STEPS_PER_ONE_TURN*angle) / 360l);
+
+    // Parancs azonosító tárolása.
+    setActionID(actionID);
 
     isRunning = true;
     return;
@@ -68,7 +77,10 @@ void Motor::finishAction()
   isRunning = false;
   Serial.print("dm:");
   Serial.print("finished|");
-  Serial.println(getDeviceID());
+  Serial.print(getDeviceID());
+  Serial.print("$");
+  Serial.println(getActionID());
+  setActionID(0);
 }
 
 AccelStepper* Motor::getStepper()
@@ -81,7 +93,7 @@ bool Motor::isFinished()
   return ((0 == stepper->distanceToGo()) && isRunning);
 }
 
-void Motor::moveSteps(int32_t steps)
+void Motor::moveSteps(long steps)
 {
   stepper->move(steps);
 }

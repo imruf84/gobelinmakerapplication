@@ -37,7 +37,10 @@ void DeviceManager::doAction(String action)
     // Ha egyezik az azonosító a címzettel, akkor végrehajtatjuk a műveletet.
     if (!strcmp(d->getDeviceID().c_str(), pID))
     {
-      d->doAction(action);
+      // Parancs azonosítójának a lekérdezése.
+      uint16_t actionID;
+      sscanf(action.c_str(), "dm:%[^'$']$%u", NULL, &actionID);
+      d->doAction(action, actionID);
       return;
     }
   }

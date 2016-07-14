@@ -10,3 +10,12 @@ String Device::getDeviceID()
   return ID;
 }
 
+void Device::setActionID(uint16_t actionID)
+{
+  this->actionID = actionID;
+}
+uint16_t Device::getActionID()
+{
+  return this->actionID;
+}
+

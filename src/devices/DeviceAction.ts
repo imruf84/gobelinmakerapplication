@@ -1,8 +1,14 @@
+/// <reference path="../utils/UniqueIdentifier.ts"/>
+
 /**
  * Eszköz parancs.
  */
 class DeviceAction {
 
+    /**
+     * Parancs azonosítója.
+     */
+    private actionID: UniqueIdentifier = new UniqueIdentifier();
     /**
      * Eszköz azonosítója.
      */

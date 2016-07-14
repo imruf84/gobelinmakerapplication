@@ -22,8 +22,34 @@ var Device = (function () {
     };
     return Device;
 }());
+var UniqueIdentifier = (function () {
+    function UniqueIdentifier() {
+        this.ID = 0;
+        this.counter = 0;
+        var d = new Date(Date.now());
+        this.ID = parseInt(UniqueIdentifier.removeUnnecessaryChars(d.toISOString()));
+        UniqueIdentifier.lastCounter = (this.ID == UniqueIdentifier.lastUID ? ++UniqueIdentifier.lastCounter : 0);
+        this.counter = UniqueIdentifier.lastCounter;
+        UniqueIdentifier.lastUID = this.ID;
+    }
+    ;
+    UniqueIdentifier.removeUnnecessaryChars = function (s) {
+        var ls = s.split('-').join('').split('T').join('').split(':').join('');
+        return ls.substring(0, ls.indexOf('.'));
+    };
+    UniqueIdentifier.prototype.equals = function (uid) {
+        return this.ID.toString() === uid.toString();
+    };
+    UniqueIdentifier.prototype.toString = function () {
+        return this.ID + '_' + this.counter;
+    };
+    UniqueIdentifier.lastUID = 0;
+    UniqueIdentifier.lastCounter = 0;
+    return UniqueIdentifier;
+}());
 var DeviceAction = (function () {
     function DeviceAction(deviceID, action, params, callback) {
+        this.actionID = new UniqueIdentifier();
         this.deviceID = deviceID;
         this.action = action;
         this.params = params;
@@ -77,14 +103,13 @@ var Map = (function () {
     };
     Map.prototype.delete = function (key) {
         var found = false;
-        this.keyAndValues.forEach(function (value, index, array) {
-            if (found)
-                return;
-            if (key === value.key) {
-                array = array.slice(0, index).concat(array.slice(index + 1));
+        for (var i = this.keyAndValues.length - 1; i >= 0; i--) {
+            var kvp = this.keyAndValues[i];
+            if (kvp.key === key) {
                 found = true;
+                this.keyAndValues = this.keyAndValues.slice(0, i).concat(this.keyAndValues.slice(i + 1));
             }
-        });
+        }
         return found;
     };
     Map.prototype.forEach = function (callbackfn, thisArg) {
@@ -138,6 +163,22 @@ var Map = (function () {
         configurable: true
     });
     return Map;
+}());
+var ReusableCounter = (function () {
+    function ReusableCounter() {
+    }
+    ReusableCounter.generate = function () {
+        var key = 1;
+        while (ReusableCounter.keys.has(key))
+            key++;
+        ReusableCounter.keys.set(key, key);
+        return key;
+    };
+    ReusableCounter.delete = function (key) {
+        return ReusableCounter.keys.delete(key);
+    };
+    ReusableCounter.keys = new Map();
+    return ReusableCounter;
 }());
 var DeviceManager = (function () {
     function DeviceManager() {
@@ -200,9 +241,13 @@ var DeviceManager = (function () {
         });
     };
     DeviceManager.storeDeviceByIDs = function (IDs, device) {
-        for (var ID in IDs) {
+        for (var key in IDs) {
+            var ID = IDs[key];
             DeviceManager.devices.set(ID, device);
         }
+        device.getSerialPort().on('data', function (data) {
+            console.log('result: ' + data);
+        });
     };
     DeviceManager.getDeviceByID = function (ID) {
         return DeviceManager.devices.get(ID);
@@ -211,9 +256,17 @@ var DeviceManager = (function () {
         var device = DeviceManager.getDeviceByID(action.getDeviceID());
         if (null == device)
             return;
-        console.log(action.toString());
+        var actionStr = action.toString() + '$' + ReusableCounter.generate() + '\n';
+        device.getSerialPort().write(actionStr, function (err, res) {
+            if (err) {
+                Messages.error('ERROR:' + err);
+                return;
+            }
+        });
+        console.log('doAction: ' + Date.now() + " " + actionStr.replace('\n', ''));
     };
     DeviceManager.devices = new Map();
+    DeviceManager.startedActions = new Map();
     return DeviceManager;
 }());
 var RequestHandler = (function () {

@@ -32,13 +32,14 @@ class Map<K, V> { // class MapDDD<K,V> implements Map
     }
     delete(key: K): boolean {
         var found = false;
-        this.keyAndValues.forEach(function (value: KeyValuePair<K, V>, index: number, array: KeyValuePair<K, V>[]): void {
-            if (found) return;
-            if (key === value.key) {
-                array = array.slice(0, index).concat(array.slice(index + 1));
+        for (var i: number = this.keyAndValues.length - 1; i >= 0; i--) {
+            var kvp: KeyValuePair<K, V> = this.keyAndValues[i];
+            if (kvp.key === key) {
                 found = true;
+                this.keyAndValues = this.keyAndValues.slice(0, i).concat(this.keyAndValues.slice(i + 1));
             }
-        });
+        }
+
         return found;
     }
     forEach(callbackfn: (value: V, key: K, map: Map<K, V>) => void, thisArg?: any): void {
