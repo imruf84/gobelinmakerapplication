@@ -28,3 +28,4 @@ Modulok:
     npm install -g express
     npm install -g body-parser
     npm install -g command-line-args
+    npm install -g command-line-usage
