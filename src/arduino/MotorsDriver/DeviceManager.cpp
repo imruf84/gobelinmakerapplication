@@ -28,7 +28,6 @@ void DeviceManager::doAction(String action)
   // Címzett eszköz azonosítójának a lekérdezése.
   char pID[10];
   sscanf(action.c_str(), "dm:%[^'|']|%[^'|']", NULL, pID);
-
   Device *d = NULL;
   for (int i = 0; i < devices.size(); i++)
   {

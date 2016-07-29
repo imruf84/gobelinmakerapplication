@@ -75,6 +75,8 @@ class DeviceManager {
 
                         // Egyébként tároljuk az eszközt.
                         var deviceID = data.toString().replace('deviceIDs:', '');
+                        // HACK: valamiért egy extra karaktert is kapunk a szöveg végén, amire nincs szükségünk ezért levágjuk
+                        deviceID = deviceID.substring(0, deviceID.length - 1); 
                         Messages.log('Device(s) found at ' + sp.path + ' with IDs: ' + deviceID);
                         DeviceManager.storeDeviceByIDs(deviceID.split(';'), new Device(deviceID, sp));
 
@@ -108,7 +110,7 @@ class DeviceManager {
                         sp.write('getDeviceIDs\n', function (err, res) {
                             // Hiba esetén kilépünk.
                             if (err) {
-                                Messages.error('ERROR:' + err);
+                                Messages.error(err);
                                 return;
                             }
                         });
@@ -128,7 +130,9 @@ class DeviceManager {
     private static storeDeviceByIDs(IDs: [string], device: Device): void {
         for (var key in IDs) {
             var ID: string = IDs[key];
+            ID = ID.replace('\n', '');
             DeviceManager.devices.set(ID, device);
+            Messages.log('Device stored with ID: ' + ID);
         }
 
         // Beállítjuk a későbbi munkához szükséges eseményt.
@@ -154,7 +158,11 @@ class DeviceManager {
     public static doAction(action: DeviceAction): void {
 
         var device: Device = DeviceManager.getDeviceByID(action.getDeviceID());
-        if (null == device) return;
+        if (null == device) 
+        {
+            Messages.warn('No stored device found with ID: ' + action.getDeviceID());
+            return;
+        }
 
         var actionStr: string = action.toString() + '$' + ReusableCounter.generate() + '\n';
 
@@ -163,7 +171,7 @@ class DeviceManager {
             function (err, res) {
                 // Hiba esetén kilépünk.
                 if (err) {
-                    Messages.error('ERROR:' + err);
+                    Messages.error(err);
                     return;
                 }
             });

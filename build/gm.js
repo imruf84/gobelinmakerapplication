@@ -211,6 +211,7 @@ var DeviceManager = (function () {
                         if (!data.toString().startsWith('deviceIDs:'))
                             return;
                         var deviceID = data.toString().replace('deviceIDs:', '');
+                        deviceID = deviceID.substring(0, deviceID.length - 1);
                         Messages.log('Device(s) found at ' + sp.path + ' with IDs: ' + deviceID);
                         DeviceManager.storeDeviceByIDs(deviceID.split(';'), new Device(deviceID, sp));
                         found++;
@@ -231,7 +232,7 @@ var DeviceManager = (function () {
                     setTimeout(function () {
                         sp.write('getDeviceIDs\n', function (err, res) {
                             if (err) {
-                                Messages.error('ERROR:' + err);
+                                Messages.error(err);
                                 return;
                             }
                         });
@@ -243,7 +244,9 @@ var DeviceManager = (function () {
     DeviceManager.storeDeviceByIDs = function (IDs, device) {
         for (var key in IDs) {
             var ID = IDs[key];
+            ID = ID.replace('\n', '');
             DeviceManager.devices.set(ID, device);
+            Messages.log('Device stored with ID: ' + ID);
         }
         device.getSerialPort().on('data', function (data) {
             console.log('result: ' + data);
@@ -254,12 +257,14 @@ var DeviceManager = (function () {
     };
     DeviceManager.doAction = function (action) {
         var device = DeviceManager.getDeviceByID(action.getDeviceID());
-        if (null == device)
+        if (null == device) {
+            Messages.warn('No stored device found with ID: ' + action.getDeviceID());
             return;
+        }
         var actionStr = action.toString() + '$' + ReusableCounter.generate() + '\n';
         device.getSerialPort().write(actionStr, function (err, res) {
             if (err) {
-                Messages.error('ERROR:' + err);
+                Messages.error(err);
                 return;
             }
         });
@@ -373,7 +378,12 @@ var MotorControlHandler = (function (_super) {
     }
     MotorControlHandler.prototype.postDataProcess = function (req, res, data) {
         var key;
-        key = 'MOTOR_X';
+        key = 'MB';
+        if (data[key]) {
+            var value = Number(data[key]);
+            DeviceManager.doAction(new DeviceAction(key, 'angle', [isNaN(value) ? 0 : value], function () { console.log(this.getDeviceID() + ' is finished.'); }));
+        }
+        key = 'MBN';
         if (data[key]) {
             var value = Number(data[key]);
             DeviceManager.doAction(new DeviceAction(key, 'angle', [isNaN(value) ? 0 : value], function () { console.log(this.getDeviceID() + ' is finished.'); }));
@@ -385,8 +395,11 @@ var MotorControlHandler = (function (_super) {
         res.write('<br><br>');
         res.write('<center>' +
             '<form action="' + this.getPath() + '" method="post">' +
-            ' X: <input type="number" name="MOTOR_X" value="0">' +
-            ' <br><br><input type="submit" value="Send">' +
+            '<table border="0">' +
+            ' <tr><td>BOTTOM:</td><td><input type="number" name="MB" value="0"></td></tr>' +
+            ' <tr><td>BOTTOM NEEDLE:</td><td><input type="number" name="MBN" value="0"></td></tr>' +
+            ' <tr><td colspan="2" align="center"><br><input type="submit" value="Send"></td></tr>' +
+            '</table>' +
             '</form>' +
             '</center>');
     };

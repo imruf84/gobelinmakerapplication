@@ -1,5 +1,7 @@
 /// <reference path="RequestHandler.ts"/>
 /// <reference path="../utils/Utils.ts"/>
+/// <reference path="../devices/DeviceAction.ts"/>
+/// <reference path="../devices/DeviceManager.ts"/>
 
 /**
  * Motorvezérlő kezelője.
@@ -14,7 +16,15 @@ class MotorControlHandler extends RequestHandler {
 
         var key: string;
 
-        key = 'MOTOR_X';
+        key = 'MB';
+        if (data[key]) {
+            var value: number = Number(data[key]);
+            DeviceManager.doAction(
+                new DeviceAction(key, 'angle', [isNaN(value) ? 0 : value], function(){console.log(this.getDeviceID() + ' is finished.');})
+            );
+        }
+
+        key = 'MBN';
         if (data[key]) {
             var value: number = Number(data[key]);
             DeviceManager.doAction(
@@ -32,8 +42,11 @@ class MotorControlHandler extends RequestHandler {
         res.write(
             '<center>' + 
             '<form action="' + this.getPath() + '" method="post">' +
-            ' X: <input type="number" name="MOTOR_X" value="0">' +
-            ' <br><br><input type="submit" value="Send">' +
+            '<table border="0">' +
+            ' <tr><td>BOTTOM:</td><td><input type="number" name="MB" value="0"></td></tr>' +
+            ' <tr><td>BOTTOM NEEDLE:</td><td><input type="number" name="MBN" value="0"></td></tr>' +
+            ' <tr><td colspan="2" align="center"><br><input type="submit" value="Send"></td></tr>' +
+            '</table>' + 
             '</form>' +
             '</center>'
         );

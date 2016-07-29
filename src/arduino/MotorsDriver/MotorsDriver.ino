@@ -35,8 +35,8 @@ void setup()
   mySetup();
 
   // Motorok létrehozása.
-  deviceManager.addDevice(new Motor("MOTOR_X", 3, 4, 5, 6));
-  deviceManager.addDevice(new Motor("MOTOR_Y", 7, 8, 9, 10));
+  deviceManager.addDevice(new Motor("MB", 3, 4, 5, 6));
+  deviceManager.addDevice(new Motor("MBN", 7, 8, 9, 10));
 }
 
 void loop()
