@@ -6,17 +6,28 @@ declare var process;
 
 // Parancssori argumentumok lekérdezése.
 var commandLineArgs = require('command-line-args');
+var getUsage = require('command-line-usage')
 
-var cli = commandLineArgs([
+var options = commandLineArgs([
     { name: 'help', alias: 'h', type: Boolean },
     { name: 'server', alias: 's', type: Boolean },
     { name: 'devices', alias: 'd', type: Boolean }
 ]);
 
-var options = cli.parse(process.argv);
-
 if (!(Utils.keys(options).length > 0) || options.help) {
-    Messages.log(cli.getUsage());
+    Messages.log(getUsage([{
+        header: 'Gobelin maker control application.',
+        content: 'Controls the gobelin maker machine..'
+    },
+        {
+            header: 'Options',
+            optionList: [
+                { name: 'server', alias: 's', type: Boolean, description: 'Create and run the http server.' },
+                { name: 'devices', alias: 'd', type: Boolean, description: 'Scan the connected devices.' },
+                { name: 'help', alias: 'h', type: Boolean, description: 'Print this usage guide.' }
+            ]
+        }
+    ]));
     process.exit(1);
 }
 
@@ -29,7 +40,7 @@ var isHttpServerCreated: boolean = false;
 
 // Eszközök felderítése.
 if (isConnectToDevices) {
-    DeviceManager.scanDevices(2000, 
+    DeviceManager.scanDevices(2000,
         function () {
             Messages.log('Device scanning finished.');
 
