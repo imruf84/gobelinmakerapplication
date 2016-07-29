@@ -146,6 +146,10 @@ class DeviceManager {
         device.getSerialPort().on('data', function (data) {
             console.log('result: ' + data);
         });
+
+        device.getSerialPort().on('disconnect', function (data) {
+            console.log('disconnect');
+        });
     }
 
     /**

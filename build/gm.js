@@ -256,6 +256,9 @@ var DeviceManager = (function () {
         device.getSerialPort().on('data', function (data) {
             console.log('result: ' + data);
         });
+        device.getSerialPort().on('disconnect', function (data) {
+            console.log('disconnect');
+        });
     };
     DeviceManager.getDeviceByID = function (ID) {
         return DeviceManager.devices.get(ID);
