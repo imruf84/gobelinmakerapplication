@@ -199,6 +199,7 @@ var DeviceManager = (function () {
                 return;
             }
             counter = ports.length;
+            console.log(counter);
             ports.forEach(function (port) {
                 if (port.comName.startsWith('ttyAMA'))
                     return;
@@ -225,6 +226,7 @@ var DeviceManager = (function () {
                 });
                 sp.open(function (err) {
                     counter--;
+                    console.log(counter);
                     if (err) {
                         Messages.error(err);
                         return;

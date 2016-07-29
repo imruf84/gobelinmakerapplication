@@ -52,6 +52,7 @@ class DeviceManager {
 
             // Számláló deklarálása.
             counter = ports.length;
+console.log(counter);
 
             // Végigmegyünk a portokon.
             ports.forEach(function (port) {
@@ -98,6 +99,7 @@ class DeviceManager {
 
                     // Csökkentjük a felderítendő eszközök számát.
                     counter--;
+                    console.log(counter);
 
                     if (err) {
                         Messages.error(err);
