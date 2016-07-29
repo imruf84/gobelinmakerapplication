@@ -190,8 +190,12 @@ var DeviceManager = (function () {
         var counter = 0;
         var found = 0;
         setTimeout(function () {
-            if (!(found > 0))
+            if (!(found > 0)) {
                 nofound();
+            }
+            else {
+                callback();
+            }
         }, 5000);
         serialPort.list(function (err, ports) {
             if (err) {
@@ -199,7 +203,6 @@ var DeviceManager = (function () {
                 return;
             }
             counter = ports.length;
-            console.log(counter);
             ports.forEach(function (port) {
                 if (port.comName.startsWith('ttyAMA'))
                     return;
@@ -225,8 +228,8 @@ var DeviceManager = (function () {
                     });
                 });
                 sp.open(function (err) {
+                    Messages.log('Opening port ' + sp.path);
                     counter--;
-                    console.log(counter);
                     if (err) {
                         Messages.error(err);
                         return;
@@ -437,11 +440,12 @@ var Server = (function () {
 }());
 var commandLineArgs = require('command-line-args');
 var getUsage = require('command-line-usage');
-var options = commandLineArgs([
+var optionParts = [
     { name: 'help', alias: 'h', type: Boolean },
     { name: 'server', alias: 's', type: Boolean },
     { name: 'devices', alias: 'd', type: Boolean }
-]);
+];
+var options = commandLineArgs(optionParts);
 if (!(Utils.keys(options).length > 0) || options.help) {
     Messages.log(getUsage([{
             header: 'Gobelin maker control application.',
@@ -449,11 +453,7 @@ if (!(Utils.keys(options).length > 0) || options.help) {
         },
         {
             header: 'Options',
-            optionList: [
-                { name: 'server', alias: 's', type: Boolean, description: 'Create and run the http server.' },
-                { name: 'devices', alias: 'd', type: Boolean, description: 'Scan the connected devices.' },
-                { name: 'help', alias: 'h', type: Boolean, description: 'Print this usage guide.' }
-            ]
+            optionList: optionParts
         }
     ]));
     process.exit(1);

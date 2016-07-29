@@ -39,7 +39,11 @@ class DeviceManager {
 
         // Ha adott idő után sem találunk eszközt, akkor jelezzük.
         setTimeout(function () {
-            if (!(found > 0)) nofound();
+            if (!(found > 0)) {
+                nofound();
+            } else {
+                callback();
+            }
         }, 5000);
 
         // Portok listázása.
@@ -52,7 +56,6 @@ class DeviceManager {
 
             // Számláló deklarálása.
             counter = ports.length;
-console.log(counter);
 
             // Végigmegyünk a portokon.
             ports.forEach(function (port) {
@@ -97,9 +100,11 @@ console.log(counter);
                 // Port megnyitása.
                 sp.open(function (err) {
 
+                    Messages.log('Opening port ' + sp.path);
+                    
+
                     // Csökkentjük a felderítendő eszközök számát.
                     counter--;
-                    console.log(counter);
 
                     if (err) {
                         Messages.error(err);

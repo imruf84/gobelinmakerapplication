@@ -8,11 +8,13 @@ declare var process;
 var commandLineArgs = require('command-line-args');
 var getUsage = require('command-line-usage')
 
-var options = commandLineArgs([
+var optionParts = [
     { name: 'help', alias: 'h', type: Boolean },
     { name: 'server', alias: 's', type: Boolean },
     { name: 'devices', alias: 'd', type: Boolean }
-]);
+];
+
+var options = commandLineArgs(optionParts);
 
 if (!(Utils.keys(options).length > 0) || options.help) {
     Messages.log(getUsage([{
@@ -21,11 +23,7 @@ if (!(Utils.keys(options).length > 0) || options.help) {
     },
         {
             header: 'Options',
-            optionList: [
-                { name: 'server', alias: 's', type: Boolean, description: 'Create and run the http server.' },
-                { name: 'devices', alias: 'd', type: Boolean, description: 'Scan the connected devices.' },
-                { name: 'help', alias: 'h', type: Boolean, description: 'Print this usage guide.' }
-            ]
+            optionList: optionParts
         }
     ]));
     process.exit(1);
