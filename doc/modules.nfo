@@ -23,6 +23,9 @@ Linux alatt nodejs telepítése:
 
 Modulok:
 --------
+    
+    ln -s /usr/local/lib/node /usr/local/lib/node_modules (ha linux alatt nem találná a modulokat)
+
     npm install -g node-gyp (elvileg nem szükséges)
     npm install -g serialport (linux alatt: sudo npm install -g --unsafe-perm serialport)
     npm install -g express
