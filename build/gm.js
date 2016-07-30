@@ -404,8 +404,8 @@ var MotorControlHandler = (function (_super) {
         res.write('<center>' +
             '<form action="' + this.getPath() + '" method="post">' +
             '<table border="0">' +
-            ' <tr><td>BOTTOM:</td><td><input type="number" name="MB" value="0"></td></tr>' +
-            ' <tr><td>BOTTOM NEEDLE:</td><td><input type="number" name="MBN" value="0"></td></tr>' +
+            ' <tr><td>Bottom motion:</td><td><input type="number" name="MB" value="0"></td></tr>' +
+            ' <tr><td>Bottom needle:</td><td><input type="number" name="MBN" value="0"></td></tr>' +
             ' <tr><td colspan="2" align="center"><br><input type="submit" value="Send"></td></tr>' +
             '</table>' +
             '</form>' +
