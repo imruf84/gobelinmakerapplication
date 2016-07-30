@@ -462,19 +462,26 @@ if (!(Utils.keys(options).length > 0) || options.help) {
     process.exit(1);
 }
 var isConnectToDevices = options.devices;
+var scanDeviceFinished = false;
 var isCreateHttpServer = options.server;
 var isHttpServerCreated = false;
 if (isConnectToDevices) {
     DeviceManager.scanDevices(2000, function () {
+        if (scanDeviceFinished)
+            return;
+        scanDeviceFinished = true;
         Messages.log('Device scanning finished.');
         createHttpServer();
     }, function () {
+        if (scanDeviceFinished)
+            return;
+        scanDeviceFinished = true;
         Messages.warn("No connected devices found.");
         createHttpServer();
     });
 }
 var createHttpServer = function () {
-    if (isCreateHttpServer) {
+    if (isCreateHttpServer && !isHttpServerCreated) {
         var server = new Server(3000);
         var mmh = new MainMenuHandler();
         server.registerHandler(mmh);

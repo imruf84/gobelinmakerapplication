@@ -31,6 +31,7 @@ if (!(Utils.keys(options).length > 0) || options.help) {
 
 // Csatlakozás eszközökhöz.
 var isConnectToDevices: boolean = options.devices;
+var scanDeviceFinished: boolean = false;
 // HTTP szerver indítása.
 var isCreateHttpServer: boolean = options.server;
 // HTTP szerver létrehozása sikeres volt-e?
@@ -40,6 +41,10 @@ var isHttpServerCreated: boolean = false;
 if (isConnectToDevices) {
     DeviceManager.scanDevices(2000,
         function () {
+
+            if (scanDeviceFinished) return;
+            scanDeviceFinished = true;
+
             Messages.log('Device scanning finished.');
 
             // Vezérlők létrehozása, tárolása.
@@ -48,6 +53,9 @@ if (isConnectToDevices) {
             createHttpServer();
         },
         function () {
+            if (scanDeviceFinished) return;
+            scanDeviceFinished = true;
+            
             // Ha adott idő után sem találunk eszközt, akkor jelezzük.
             Messages.warn("No connected devices found.");
             // HTTP szerver létrehozása.
@@ -58,7 +66,7 @@ if (isConnectToDevices) {
 
 // HTTP szerver létrehozásának függvénye.
 var createHttpServer = function () {
-    if (isCreateHttpServer) {
+    if (isCreateHttpServer && !isHttpServerCreated) {
 
         // Szerver létrehozása.
         var server: Server = new Server(3000);
