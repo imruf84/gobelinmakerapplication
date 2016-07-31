@@ -13,6 +13,12 @@ Linux alatt nodejs telepítése:
 
     wget http://nodejs.org/dist/latest-v6.x/node-v6.1.0.tar.gz
     tar -xvf nodejs.org/dist/latest-v6.x/node-v6.1.0.tar.gz
+
+    vagy git: 
+        git clone https://github.com/nodejs/node.git
+        cd node
+        git checkout v6.1.0
+
     cd node-v6.1.0
     ./configure
     make
@@ -21,11 +27,11 @@ Linux alatt nodejs telepítése:
     .bashrc fájl utolsó sorába beszúrni:
     export NODE_PATH=/usr/local/lib/node_modules
 
+    Meglehet, hogy linux alatt nem találná a modulokat ezért kell ez a link.
+    ln -s /usr/local/lib/node /usr/local/lib/node_modules
+
 Modulok:
 --------
-    
-    ln -s /usr/local/lib/node /usr/local/lib/node_modules (ha linux alatt nem találná a modulokat)
-
     npm install -g node-gyp (elvileg nem szükséges)
     npm install -g serialport (linux alatt: sudo npm install -g --unsafe-perm serialport)
     npm install -g express
