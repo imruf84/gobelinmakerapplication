@@ -10,16 +10,20 @@ Linux alatt nodejs telepítése:
 
     sudo apt-get install gcc-4.8 g++-4.8
     /usr/bin könyvtárban le kell cserélni a g++ és gcc linkeket, hogy a 4.8-asra mutassanak (mc-vel egyszerű)
+    sudo rm /usr/bin/gcc
+    sudo ln -s /usr/bin/gcc-4.8 /usr/bin/gcc
+    sudo rm /usr/bin/g++
+    sudo ln -s /usr/bin/g++-4.8 /usr/bin/g++
 
-    wget http://nodejs.org/dist/latest-v6.x/node-v6.1.0.tar.gz
-    tar -xvf nodejs.org/dist/latest-v6.x/node-v6.1.0.tar.gz
+    wget http://nodejs.org/dist/latest-v6.x/node-v6.3.1.tar.gz
+    tar -xvf node-v6.3.1.tar.gz
 
     vagy git: 
         git clone https://github.com/nodejs/node.git
         cd node
-        git checkout v6.1.0
+        git checkout v6.3.1
 
-    cd node-v6.1.0
+    cd node-v6.3.1
     ./configure
     make
     sudo make install
