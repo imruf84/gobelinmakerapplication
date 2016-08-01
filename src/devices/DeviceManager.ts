@@ -73,14 +73,14 @@ class DeviceManager {
                 sp.on('open', function () {
 
                     sp.on('data', function (data) {
-                        
+
                         // Ha az üzenet nem eszközazonosító, akkor kilépünk.
                         if (!data.toString().startsWith('deviceIDs:')) return;
 
                         // Egyébként tároljuk az eszközt.
                         var deviceID = data.toString().replace('deviceIDs:', '');
                         // HACK: valamiért egy extra karaktert is kapunk a szöveg végén, amire nincs szükségünk ezért levágjuk
-                        deviceID = deviceID.substring(0, deviceID.length - 1); 
+                        deviceID = deviceID.substring(0, deviceID.length - 1);
                         Messages.log('Device(s) found at ' + sp.path + ' with IDs: ' + deviceID);
                         DeviceManager.storeDeviceByIDs(deviceID.split(';'), new Device(deviceID, sp));
 
@@ -101,7 +101,7 @@ class DeviceManager {
                 sp.open(function (err) {
 
                     Messages.log('Opening port ' + sp.path);
-                    
+
 
                     // Csökkentjük a felderítendő eszközök számát.
                     counter--;
@@ -146,10 +146,6 @@ class DeviceManager {
         device.getSerialPort().on('data', function (data) {
             console.log('result: ' + data);
         });
-
-        device.getSerialPort().on('disconnect', function (data) {
-            console.log('disconnect');
-        });
     }
 
     /**
@@ -169,8 +165,7 @@ class DeviceManager {
     public static doAction(action: DeviceAction): void {
 
         var device: Device = DeviceManager.getDeviceByID(action.getDeviceID());
-        if (null == device) 
-        {
+        if (null == device) {
             Messages.warn('No stored device found with ID: ' + action.getDeviceID());
             return;
         }

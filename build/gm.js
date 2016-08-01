@@ -256,9 +256,6 @@ var DeviceManager = (function () {
         device.getSerialPort().on('data', function (data) {
             console.log('result: ' + data);
         });
-        device.getSerialPort().on('disconnect', function (data) {
-            console.log('disconnect');
-        });
     };
     DeviceManager.getDeviceByID = function (ID) {
         return DeviceManager.devices.get(ID);
@@ -385,16 +382,14 @@ var MotorControlHandler = (function (_super) {
         _super.call(this, '/motorcontrol', 'Motor control', parent);
     }
     MotorControlHandler.prototype.postDataProcess = function (req, res, data) {
-        var key;
-        key = 'MB';
-        if (data[key]) {
-            var value = Number(data[key]);
-            DeviceManager.doAction(new DeviceAction(key, 'angle', [isNaN(value) ? 0 : value], function () { console.log(this.getDeviceID() + ' is finished.'); }));
-        }
-        key = 'MBN';
-        if (data[key]) {
-            var value = Number(data[key]);
-            DeviceManager.doAction(new DeviceAction(key, 'angle', [isNaN(value) ? 0 : value], function () { console.log(this.getDeviceID() + ' is finished.'); }));
+        for (var _i = 0, _a = ['MB', 'MBN']; _i < _a.length; _i++) {
+            var key = _a[_i];
+            if (data[key]) {
+                var value = Number(data[key]);
+                if (!isNaN(value) && 0 != value) {
+                    DeviceManager.doAction(new DeviceAction(key, 'angle', [value], function () { console.log(this.getDeviceID() + ' is finished.'); }));
+                }
+            }
         }
         return false;
     };

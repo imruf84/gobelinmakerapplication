@@ -14,22 +14,16 @@ class MotorControlHandler extends RequestHandler {
 
     protected postDataProcess(req, res, data): boolean {
 
-        var key: string;
-
-        key = 'MB';
-        if (data[key]) {
-            var value: number = Number(data[key]);
-            DeviceManager.doAction(
-                new DeviceAction(key, 'angle', [isNaN(value) ? 0 : value], function(){console.log(this.getDeviceID() + ' is finished.');})
-            );
-        }
-
-        key = 'MBN';
-        if (data[key]) {
-            var value: number = Number(data[key]);
-            DeviceManager.doAction(
-                new DeviceAction(key, 'angle', [isNaN(value) ? 0 : value], function(){console.log(this.getDeviceID() + ' is finished.');})
-            );
+        // Motorok vezérlése.
+        for (var key of ['MB', 'MBN']) {
+            // Ha van adat az elküldött űrlapon, akkor feldolgozzuk.
+            if (data[key]) {
+                var value: number = Number(data[key]);
+                // Érvénytelen adatokat nem küldünk.
+                if (!isNaN(value) && 0 != value) {
+                    DeviceManager.doAction(new DeviceAction(key, 'angle', [value], function () { console.log(this.getDeviceID() + ' is finished.'); }));
+                }
+            }
         }
 
         return false;
@@ -40,13 +34,13 @@ class MotorControlHandler extends RequestHandler {
         // Megjelenítjük az űrlapot. 
         res.write('<br><br>');
         res.write(
-            '<center>' + 
+            '<center>' +
             '<form action="' + this.getPath() + '" method="post">' +
             '<table border="0">' +
             ' <tr><td>Bottom motion:</td><td><input type="number" name="MB" value="0"></td></tr>' +
             ' <tr><td>Bottom needle:</td><td><input type="number" name="MBN" value="0"></td></tr>' +
             ' <tr><td colspan="2" align="center"><br><input type="submit" value="Send"></td></tr>' +
-            '</table>' + 
+            '</table>' +
             '</form>' +
             '</center>'
         );
