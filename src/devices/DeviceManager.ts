@@ -30,8 +30,7 @@ class DeviceManager {
      */
     public static scanDevices(timeout: number, callback: () => void, nofound: () => void) {
 
-        var serialPort = require('serialport');
-        var SerialPort = require('serialport').SerialPort;
+        var SerialPort = require('serialport');
 
         Messages.log('Scanning devices...');
         var counter: number = 0;
@@ -47,7 +46,7 @@ class DeviceManager {
         }, 5000);
 
         // Portok listázása.
-        serialPort.list(function (err, ports) {
+        SerialPort.list(function (err, ports) {
             // Hiba esetén kilépünk.
             if (err) {
                 Messages.error(err);
@@ -65,9 +64,10 @@ class DeviceManager {
 
                 // Port létrehozása.
                 var sp = new SerialPort(port.comName, {
+                    autoOpen: false, 
                     baudrate: 9600,
-                    parser: serialPort.parsers.readline('\n')
-                }, false);
+                    parser: SerialPort.parsers.readline('\n')
+                });
 
                 // Események deklarálása.
                 sp.on('open', function () {

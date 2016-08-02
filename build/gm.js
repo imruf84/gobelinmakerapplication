@@ -184,8 +184,7 @@ var DeviceManager = (function () {
     function DeviceManager() {
     }
     DeviceManager.scanDevices = function (timeout, callback, nofound) {
-        var serialPort = require('serialport');
-        var SerialPort = require('serialport').SerialPort;
+        var SerialPort = require('serialport');
         Messages.log('Scanning devices...');
         var counter = 0;
         var found = 0;
@@ -197,7 +196,7 @@ var DeviceManager = (function () {
                 callback();
             }
         }, 5000);
-        serialPort.list(function (err, ports) {
+        SerialPort.list(function (err, ports) {
             if (err) {
                 Messages.error(err);
                 return;
@@ -207,9 +206,10 @@ var DeviceManager = (function () {
                 if (port.comName.startsWith('ttyAMA'))
                     return;
                 var sp = new SerialPort(port.comName, {
+                    autoOpen: false,
                     baudrate: 9600,
-                    parser: serialPort.parsers.readline('\n')
-                }, false);
+                    parser: SerialPort.parsers.readline('\n')
+                });
                 sp.on('open', function () {
                     sp.on('data', function (data) {
                         if (!data.toString().startsWith('deviceIDs:'))
