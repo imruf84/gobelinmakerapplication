@@ -1,0 +1,5 @@
+/**
+ * Lyuk.
+ */
+class Hole {
+}

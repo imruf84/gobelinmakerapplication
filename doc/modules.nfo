@@ -1,0 +1,44 @@
+Használathoz az alábbi modulok telepítése szükséges (mindet globálisan):
+========================================================================
+
+Windows esetében környezeti változót létre kell hozni: 
+------------------------------------------------------
+    NODE_PATH -> c:\Users\imruf84\appdata\Roaming\npm\node_modules
+
+Linux alatt nodejs telepítése:
+------------------------------
+
+    sudo apt-get install gcc-4.8 g++-4.8
+    /usr/bin könyvtárban le kell cserélni a g++ és gcc linkeket, hogy a 4.8-asra mutassanak (mc-vel egyszerű)
+    sudo rm /usr/bin/gcc
+    sudo ln -s /usr/bin/gcc-4.8 /usr/bin/gcc
+    sudo rm /usr/bin/g++
+    sudo ln -s /usr/bin/g++-4.8 /usr/bin/g++
+
+    wget http://nodejs.org/dist/latest-v6.x/node-v6.3.1.tar.gz
+    tar -xvf node-v6.3.1.tar.gz
+
+    vagy git: 
+        git clone https://github.com/nodejs/node.git
+        cd node
+        git checkout v6.3.1
+
+    cd node-v6.3.1
+    ./configure
+    make
+    sudo make install
+    
+    .bashrc fájl utolsó sorába beszúrni:
+    export NODE_PATH=/usr/local/lib/node_modules
+
+    Meglehet, hogy linux alatt nem találná a modulokat ezért kell ez a link.
+    ln -s /usr/local/lib/node /usr/local/lib/node_modules
+
+Modulok:
+--------
+    npm install -g node-gyp (elvileg nem szükséges)
+    npm install -g serialport (linux alatt: sudo npm install -g --unsafe-perm serialport)
+    npm install -g express
+    npm install -g body-parser
+    npm install -g command-line-args
+    npm install -g command-line-usage
