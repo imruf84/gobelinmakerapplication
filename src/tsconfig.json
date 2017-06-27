@@ -3,13 +3,11 @@
         "gm.ts"
     ],
     "compilerOptions": {
-        "pretty": false,
         "listFiles": false,
         "charset": "UTF-8",
         "removeComments": true,
-        "allowJs": false,
         "outDir": "../build",
-        "outFile": "../build/gm.js",
+        "out": "./build/gm.js",
         "target": "es5",
         "module": "amd",
         "sourceMap": false
