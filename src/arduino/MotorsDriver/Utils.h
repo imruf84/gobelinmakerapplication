@@ -29,7 +29,7 @@ void handleEvent(String msg)
     return;
   }
 
-  // Eszközkezelő kapott utasítást.
+  // Eszközkezelő kapott utasítást (dm=DeviceManager).
   if (msg.startsWith("dm:"))
   {
     deviceManager.doAction(msg);
