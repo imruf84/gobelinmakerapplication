@@ -50,6 +50,11 @@ class Device {
         return this.serial;
     }
 
+    /**
+     * Átalakítás karakterlánccá.
+     * 
+     * @return karakterlánc
+     */
     public toString(): string {
         return 'Device[ID: ' + this.getID() + ', portName: ' + this.getPortName() + ']';
     }

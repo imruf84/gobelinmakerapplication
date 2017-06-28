@@ -19,7 +19,9 @@ class UniqueIdentifier {
      */
     private static lastCounter: number = 0;
 
-
+    /**
+     * Konstruktor.
+     */
     constructor() {
 
         // Azonosító előállítása az aktuális dátumból.
@@ -51,6 +53,11 @@ class UniqueIdentifier {
         return this.ID.toString() === uid.toString();
     }
 
+    /**
+     * Átalakítás karakterlánccá.
+     * 
+     * @return karakterlánc
+     */
     public toString(): string {
         return this.ID + '_' + this.counter;
     }

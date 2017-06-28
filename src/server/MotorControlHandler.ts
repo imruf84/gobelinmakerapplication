@@ -8,10 +8,23 @@
  */
 class MotorControlHandler extends RequestHandler {
 
+    /**
+     * Konstruktor.
+     * 
+     * @param parent szülő kérés
+     */
     constructor(parent: RequestHandler) {
         super('/motorcontrol', 'Motor control', parent);
     }
 
+    /**
+     * Űrlap adatainak a feldolgozása (POST adatok).
+     * 
+     * @param req kérés
+     * @param res válasz
+     * @param data adatok
+     * @return minden esetben hamis (használaton kívüli)
+     */
     protected postDataProcess(req, res, data): boolean {
 
         // Motorok vezérlése.
@@ -29,6 +42,12 @@ class MotorControlHandler extends RequestHandler {
         return false;
     };
 
+    /**
+     * Kérés lekezelése (űrlap megjelenítése).
+     * 
+     * @param req kérés
+     * @param res válasz
+     */
     protected handle(req, res): void {
 
         // Megjelenítjük az űrlapot. 

@@ -1,8 +1,3 @@
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
 var Device = (function () {
     function Device(ID, serial) {
         this.ID = ID;
@@ -21,7 +16,7 @@ var Device = (function () {
         return 'Device[ID: ' + this.getID() + ', portName: ' + this.getPortName() + ']';
     };
     return Device;
-}());
+})();
 var UniqueIdentifier = (function () {
     function UniqueIdentifier() {
         this.ID = 0;
@@ -43,10 +38,11 @@ var UniqueIdentifier = (function () {
     UniqueIdentifier.prototype.toString = function () {
         return this.ID + '_' + this.counter;
     };
+    UniqueIdentifier.lastUID = 0;
+    UniqueIdentifier.lastCounter = 0;
     return UniqueIdentifier;
-}());
-UniqueIdentifier.lastUID = 0;
-UniqueIdentifier.lastCounter = 0;
+})();
+/// <reference path="../utils/UniqueIdentifier.ts"/>
 var DeviceAction = (function () {
     function DeviceAction(deviceID, action, params, callback) {
         this.actionID = new UniqueIdentifier();
@@ -62,7 +58,7 @@ var DeviceAction = (function () {
         return 'dm:' + this.action + '|' + this.deviceID + (this.params ? '|' + this.params.join('|') : '');
     };
     return DeviceAction;
-}());
+})();
 var Messages = (function () {
     function Messages() {
     }
@@ -76,14 +72,14 @@ var Messages = (function () {
         console.error('ERROR: ' + msg);
     };
     return Messages;
-}());
+})();
 var KeyValuePair = (function () {
     function KeyValuePair(key, value) {
         this.key = key;
         this.value = value;
     }
     return KeyValuePair;
-}());
+})();
 var Map = (function () {
     function Map() {
         this.keyAndValues = [];
@@ -163,7 +159,7 @@ var Map = (function () {
         configurable: true
     });
     return Map;
-}());
+})();
 var ReusableCounter = (function () {
     function ReusableCounter() {
     }
@@ -177,9 +173,14 @@ var ReusableCounter = (function () {
     ReusableCounter.delete = function (key) {
         return ReusableCounter.keys.delete(key);
     };
+    ReusableCounter.keys = new Map();
     return ReusableCounter;
-}());
-ReusableCounter.keys = new Map();
+})();
+/// <reference path="Device.ts"/>
+/// <reference path="DeviceAction.ts"/>
+/// <reference path="../messages/Messages.ts"/>
+/// <reference path="../utils/Collections.ts"/>
+/// <reference path="../utils/ReusableCounter.ts"/>
 var DeviceManager = (function () {
     function DeviceManager() {
     }
@@ -275,10 +276,10 @@ var DeviceManager = (function () {
         });
         console.log('doAction: ' + Date.now() + " " + actionStr.replace('\n', ''));
     };
+    DeviceManager.devices = new Map();
+    DeviceManager.startedActions = new Map();
     return DeviceManager;
-}());
-DeviceManager.devices = new Map();
-DeviceManager.startedActions = new Map();
+})();
 var RequestHandler = (function () {
     function RequestHandler(path, title, parent) {
         this.handlers = [];
@@ -352,11 +353,17 @@ var RequestHandler = (function () {
     RequestHandler.prototype.postDataProcess = function (req, res, data) { return false; };
     ;
     return RequestHandler;
-}());
+})();
+/// <reference path="RequestHandler.ts"/>
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var MainMenuHandler = (function (_super) {
     __extends(MainMenuHandler, _super);
     function MainMenuHandler() {
-        return _super.call(this, '/', 'GOBELIN MAKER', null) || this;
+        _super.call(this, '/', 'GOBELIN MAKER', null);
     }
     MainMenuHandler.prototype.handle = function (req, res) {
         this.writeTitle(req, res);
@@ -364,7 +371,7 @@ var MainMenuHandler = (function (_super) {
     };
     ;
     return MainMenuHandler;
-}(RequestHandler));
+})(RequestHandler);
 var Utils = (function () {
     function Utils() {
     }
@@ -375,11 +382,15 @@ var Utils = (function () {
         return r;
     };
     return Utils;
-}());
+})();
+/// <reference path="RequestHandler.ts"/>
+/// <reference path="../utils/Utils.ts"/>
+/// <reference path="../devices/DeviceAction.ts"/>
+/// <reference path="../devices/DeviceManager.ts"/>
 var MotorControlHandler = (function (_super) {
     __extends(MotorControlHandler, _super);
     function MotorControlHandler(parent) {
-        return _super.call(this, '/motorcontrol', 'Motor control', parent) || this;
+        _super.call(this, '/motorcontrol', 'Motor control', parent);
     }
     MotorControlHandler.prototype.postDataProcess = function (req, res, data) {
         for (var _i = 0, _a = ['MB', 'MBN']; _i < _a.length; _i++) {
@@ -408,7 +419,9 @@ var MotorControlHandler = (function (_super) {
     };
     ;
     return MotorControlHandler;
-}(RequestHandler));
+})(RequestHandler);
+/// <reference path="MainMenuHandler.ts"/>
+/// <reference path="MotorControlHandler.ts"/>
 var Server = (function () {
     function Server(port) {
         this.port = -1;
@@ -435,7 +448,10 @@ var Server = (function () {
         this.expressApp.listen(this.getPort(), callback);
     };
     return Server;
-}());
+})();
+/// <reference path="devices/DeviceManager.ts"/>
+/// <reference path="server/Server.ts"/>
+/// <reference path="utils/Utils.ts"/>
 var commandLineArgs = require('command-line-args');
 var getUsage = require('command-line-usage');
 var optionParts = [

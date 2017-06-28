@@ -22,6 +22,11 @@ class ReusableCounter {
         return key;
     }
 
+    /**
+     * Kulcs törlése.
+     * 
+     * @param key törlendő kulcs
+     */
     public static delete(key: number): boolean {
 
         return ReusableCounter.keys.delete(key);

@@ -1,5 +1,5 @@
 /**
- * Üzenetek.
+ * Üzenetek (log).
  */
 class Messages {
 

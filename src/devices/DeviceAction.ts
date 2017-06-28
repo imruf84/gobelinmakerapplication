@@ -46,6 +46,11 @@ class DeviceAction {
         return this.deviceID;
     }
 
+    /**
+     * Átalakítás karakterlánccá.
+     * 
+     * @return karakterlánc
+     */
     public toString(): string {
         return 'dm:' + this.action + '|' + this.deviceID + (this.params ? '|' + this.params.join('|') : '');
     }

@@ -12,6 +12,12 @@ class MainMenuHandler extends RequestHandler {
         super('/', 'GOBELIN MAKER', null);
     }
 
+    /**
+     * Kérés kezelése.
+     * 
+     * @param req kérés
+     * @param res válasz
+     */
     protected handle(req, res): void {
         this.writeTitle(req, res);
         this.writeSubHandlersLink(req, res);
