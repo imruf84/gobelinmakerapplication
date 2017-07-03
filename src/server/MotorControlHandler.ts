@@ -34,7 +34,19 @@ class MotorControlHandler extends RequestHandler {
                 var value: number = Number(data[key]);
                 // Érvénytelen adatokat nem küldünk.
                 if (!isNaN(value) && 0 != value) {
-                    DeviceManager.doAction(new DeviceAction(key, 'angle', [value], function () { console.log(this.getDeviceID() + ' is finished.'); }));
+                    // Parancs tárolása.
+                    //DeviceManager.doAction(
+                    ActionManager.storeAction(
+                        new DeviceAction(
+                            key, 
+                            ReusableCounter.generate(), 
+                            'angle', 
+                            [value], 
+                            function () {
+                                console.log(this.getDeviceID() + ' is finished.');
+                            }
+                        )
+                    );
                 }
             }
         }
@@ -56,8 +68,8 @@ class MotorControlHandler extends RequestHandler {
             '<center>' +
             '<form action="' + this.getPath() + '" method="post">' +
             '<table border="0">' +
-            ' <tr><td>Bottom motion:</td><td><input type="number" name="MB" value="0"></td></tr>' +
-            ' <tr><td>Bottom needle:</td><td><input type="number" name="MBN" value="0"></td></tr>' +
+            ' <tr><td>Bottom motion:</td><td><input type="number" name="MB" value="10"></td></tr>' +
+            ' <tr><td>Bottom needle:</td><td><input type="number" name="MBN" value="15"></td></tr>' +
             ' <tr><td colspan="2" align="center"><br><input type="submit" value="Send"></td></tr>' +
             '</table>' +
             '</form>' +

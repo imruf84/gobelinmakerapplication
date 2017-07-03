@@ -37,8 +37,7 @@ void DeviceManager::doAction(String action)
     if (!strcmp(d->getDeviceID().c_str(), pID))
     {
       // Parancs azonosítójának a lekérdezése.
-      uint16_t actionID;
-      sscanf(action.c_str(), "dm:%[^'$']$%u", NULL, &actionID);
+      String actionID = action.substring(action.indexOf("$")+1);
       d->doAction(action, actionID);
       return;
     }

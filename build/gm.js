@@ -21,17 +21,12 @@ var UniqueIdentifier = (function () {
     function UniqueIdentifier() {
         this.ID = 0;
         this.counter = 0;
-        var d = new Date(Date.now());
-        this.ID = parseInt(UniqueIdentifier.removeUnnecessaryChars(d.toISOString()));
+        this.ID = Math.round(+new Date() / 1000);
         UniqueIdentifier.lastCounter = (this.ID == UniqueIdentifier.lastUID ? ++UniqueIdentifier.lastCounter : 0);
         this.counter = UniqueIdentifier.lastCounter;
         UniqueIdentifier.lastUID = this.ID;
     }
     ;
-    UniqueIdentifier.removeUnnecessaryChars = function (s) {
-        var ls = s.split('-').join('').split('T').join('').split(':').join('');
-        return ls.substring(0, ls.indexOf('.'));
-    };
     UniqueIdentifier.prototype.equals = function (uid) {
         return this.ID.toString() === uid.toString();
     };
@@ -44,9 +39,12 @@ var UniqueIdentifier = (function () {
 })();
 /// <reference path="../utils/UniqueIdentifier.ts"/>
 var DeviceAction = (function () {
-    function DeviceAction(deviceID, action, params, callback) {
-        this.actionID = new UniqueIdentifier();
+    function DeviceAction(deviceID, actionID, action, params, callback) {
+        this.uid = new UniqueIdentifier();
+        this.running = false;
+        this.finished = false;
         this.deviceID = deviceID;
+        this.actionID = actionID;
         this.action = action;
         this.params = params;
         this.callback = callback;
@@ -54,24 +52,41 @@ var DeviceAction = (function () {
     DeviceAction.prototype.getDeviceID = function () {
         return this.deviceID;
     };
+    DeviceAction.prototype.getActionID = function () {
+        return this.actionID;
+    };
+    DeviceAction.prototype.getUniqueID = function () {
+        return this.uid;
+    };
+    DeviceAction.prototype.isRunning = function () {
+        return this.running;
+    };
+    DeviceAction.prototype.isFinished = function () {
+        return this.finished;
+    };
+    DeviceAction.prototype.start = function () {
+        this.running = true;
+        this.finished = false;
+    };
+    DeviceAction.prototype.finish = function () {
+        if (this.finished)
+            return;
+        this.running = false;
+        this.finished = true;
+        if (null != this.callback)
+            this.callback();
+    };
+    DeviceAction.prototype.compare = function (a) {
+        return this.getUniqueID() === a.getUniqueID();
+    };
     DeviceAction.prototype.toString = function () {
-        return 'dm:' + this.action + '|' + this.deviceID + (this.params ? '|' + this.params.join('|') : '');
+        return 'dm:'
+            + this.action
+            + '|' + this.deviceID
+            + (this.params ? '|' + this.params.join('|') : '')
+            + '$' + this.uid;
     };
     return DeviceAction;
-})();
-var Messages = (function () {
-    function Messages() {
-    }
-    Messages.log = function (msg) {
-        console.log(msg);
-    };
-    Messages.warn = function (msg) {
-        console.warn('WARNING: ' + msg);
-    };
-    Messages.error = function (msg) {
-        console.error('ERROR: ' + msg);
-    };
-    return Messages;
 })();
 var KeyValuePair = (function () {
     function KeyValuePair(key, value) {
@@ -160,6 +175,103 @@ var Map = (function () {
     });
     return Map;
 })();
+var List = (function () {
+    function List() {
+        this.items = [];
+    }
+    List.prototype.size = function () {
+        return this.items.length;
+    };
+    List.prototype.append = function (value) {
+        this.items.push(value);
+    };
+    List.prototype.isEmpty = function () {
+        return (this.size() == 0);
+    };
+    List.prototype.get = function (index) {
+        return this.items[index];
+    };
+    List.prototype.remove = function (index) {
+        if (index > -1) {
+            this.items.splice(index, 1);
+            return true;
+        }
+        return false;
+    };
+    return List;
+})();
+/// <reference path="DeviceAction.ts"/>
+/// <reference path="../utils/Map.ts"/>
+/// <reference path="../utils/List.ts"/>
+var ActionManager = (function () {
+    function ActionManager() {
+    }
+    ActionManager.storeAction = function (action) {
+        if (0 == action.getActionID())
+            return action;
+        if (!this.actions.has(action.getActionID())) {
+            ActionManager.actions.set(action.getActionID(), new List());
+        }
+        ActionManager.actions.get(action.getActionID()).append(action);
+        ActionManager.actionsByUID.set(action.getUniqueID.toString(), action);
+        return action;
+    };
+    ActionManager.storeActionsGroup = function () {
+    };
+    ActionManager.doNextAction = function (actionUID) {
+        var action = ActionManager.actionsByUID.get(actionUID);
+        if (null == action) {
+            Messages.warn('There are no stored DeviceAction by UID: ' + actionUID);
+            return;
+        }
+        var list = ActionManager.actions.get(action.getActionID());
+        var actionNext = null;
+        for (var i = 0; i < list.size(); i++) {
+            var lAction = list.get(i);
+            if (!lAction.isRunning() && !lAction.isFinished() && lAction.getDeviceID() == action.getDeviceID()) {
+                actionNext = lAction;
+                break;
+            }
+        }
+        if (null != actionNext) {
+            actionNext.start();
+            DeviceManager.doAction(actionNext);
+        }
+        else {
+            var allFinished = true;
+            for (var i = 0; i < list.size(); i++) {
+                allFinished = allFinished && list.get(i).isFinished();
+            }
+            if (allFinished) {
+                ActionManager.actions.delete(action.getActionID());
+                ReusableCounter.delete(action.getActionID());
+                var nextActionID = 0;
+                ActionManager.actions.forEach(function (value, key, map) {
+                });
+            }
+        }
+        action.finish();
+        ActionManager.actionsByUID.delete(actionUID);
+    };
+    ActionManager.actions = new Map();
+    ActionManager.actionsByUID = new Map();
+    ActionManager.currentActionID = 0;
+    return ActionManager;
+})();
+var Messages = (function () {
+    function Messages() {
+    }
+    Messages.log = function (msg) {
+        console.log(msg);
+    };
+    Messages.warn = function (msg) {
+        console.warn('WARNING: ' + msg);
+    };
+    Messages.error = function (msg) {
+        console.error('ERROR: ' + msg);
+    };
+    return Messages;
+})();
 var ReusableCounter = (function () {
     function ReusableCounter() {
     }
@@ -178,8 +290,9 @@ var ReusableCounter = (function () {
 })();
 /// <reference path="Device.ts"/>
 /// <reference path="DeviceAction.ts"/>
+/// <reference path="ActionManager.ts"/>
 /// <reference path="../messages/Messages.ts"/>
-/// <reference path="../utils/Collections.ts"/>
+/// <reference path="../utils/Map.ts"/>
 /// <reference path="../utils/ReusableCounter.ts"/>
 var DeviceManager = (function () {
     function DeviceManager() {
@@ -255,6 +368,8 @@ var DeviceManager = (function () {
             Messages.log('Device stored with ID: ' + ID);
         }
         device.getSerialPort().on('data', function (data) {
+            if (data.startsWith('dm:')) {
+            }
             console.log('result: ' + data);
         });
     };
@@ -267,17 +382,15 @@ var DeviceManager = (function () {
             Messages.warn('No stored device found with ID: ' + action.getDeviceID());
             return;
         }
-        var actionStr = action.toString() + '$' + ReusableCounter.generate() + '\n';
-        device.getSerialPort().write(actionStr, function (err, res) {
+        device.getSerialPort().write(action.toString() + '\n', function (err, res) {
             if (err) {
                 Messages.error(err);
                 return;
             }
         });
-        console.log('doAction: ' + Date.now() + " " + actionStr.replace('\n', ''));
+        console.log('doAction: ' + Date.now() + " " + action.toString());
     };
     DeviceManager.devices = new Map();
-    DeviceManager.startedActions = new Map();
     return DeviceManager;
 })();
 var RequestHandler = (function () {
@@ -398,7 +511,9 @@ var MotorControlHandler = (function (_super) {
             if (data[key]) {
                 var value = Number(data[key]);
                 if (!isNaN(value) && 0 != value) {
-                    DeviceManager.doAction(new DeviceAction(key, 'angle', [value], function () { console.log(this.getDeviceID() + ' is finished.'); }));
+                    ActionManager.storeAction(new DeviceAction(key, ReusableCounter.generate(), 'angle', [value], function () {
+                        console.log(this.getDeviceID() + ' is finished.');
+                    }));
                 }
             }
         }
@@ -410,8 +525,8 @@ var MotorControlHandler = (function (_super) {
         res.write('<center>' +
             '<form action="' + this.getPath() + '" method="post">' +
             '<table border="0">' +
-            ' <tr><td>Bottom motion:</td><td><input type="number" name="MB" value="0"></td></tr>' +
-            ' <tr><td>Bottom needle:</td><td><input type="number" name="MBN" value="0"></td></tr>' +
+            ' <tr><td>Bottom motion:</td><td><input type="number" name="MB" value="10"></td></tr>' +
+            ' <tr><td>Bottom needle:</td><td><input type="number" name="MBN" value="15"></td></tr>' +
             ' <tr><td colspan="2" align="center"><br><input type="submit" value="Send"></td></tr>' +
             '</table>' +
             '</form>' +

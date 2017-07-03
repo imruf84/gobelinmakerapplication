@@ -24,23 +24,14 @@ class UniqueIdentifier {
      */
     constructor() {
 
-        // Azonosító előállítása az aktuális dátumból.
-        var d: Date = new Date(Date.now());
-        this.ID = parseInt(UniqueIdentifier.removeUnnecessaryChars(d.toISOString()));
+        // Azonosító előállítása az aktuális dátumból (unix timestamp).
+        this.ID = Math.round(+new Date()/1000);
 
+        // Ha létezik már ilyen, akkor léptetjük.
         UniqueIdentifier.lastCounter = (this.ID == UniqueIdentifier.lastUID ? ++UniqueIdentifier.lastCounter : 0);
         this.counter = UniqueIdentifier.lastCounter;
 
         UniqueIdentifier.lastUID = this.ID; 
-    }
-
-    /**
-     * Felesleges karakterek eltávolítása a dátumból.
-     */
-    private static removeUnnecessaryChars(s: string) :string {
-        var ls: string = s.split('-').join('').split('T').join('').split(':').join('');
-
-        return ls.substring(0, ls.indexOf('.'));
     }
 
     /**

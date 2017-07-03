@@ -9,7 +9,7 @@ Motor::Motor(String ID, uint8_t pin1, uint8_t pin2, uint8_t pin3, uint8_t pin4):
   stepper->setSpeed(1000);
 }
 
-void Motor::doAction(String action, uint16_t actionID)
+void Motor::doAction(String action, String actionID)
 {
   // Adott számú lépés végrehajtása.
   if (action.startsWith("dm:steps|"))
@@ -80,7 +80,7 @@ void Motor::finishAction()
   Serial.print(getDeviceID());
   Serial.print("$");
   Serial.println(getActionID());
-  setActionID(0);
+  setActionID("");
 }
 
 AccelStepper* Motor::getStepper()

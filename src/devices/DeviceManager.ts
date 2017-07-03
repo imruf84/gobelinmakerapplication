@@ -1,7 +1,8 @@
 /// <reference path="Device.ts"/>
 /// <reference path="DeviceAction.ts"/>
+/// <reference path="ActionManager.ts"/>
 /// <reference path="../messages/Messages.ts"/>
-/// <reference path="../utils/Collections.ts"/>
+/// <reference path="../utils/Map.ts"/>
 /// <reference path="../utils/ReusableCounter.ts"/>
 
 declare function require(s: string);
@@ -16,10 +17,6 @@ class DeviceManager {
      * Eszközök tárolója.
      */
     private static devices: Map<string, Device> = new Map<string, Device>();
-    /**
-     * Kiadott parancsok tárolója.
-     */
-    private static startedActions: Map<number, Device> = new Map<number, Device>();
 
     /**
      * Eszközök keresése.
@@ -144,6 +141,12 @@ class DeviceManager {
 
         // Beállítjuk a későbbi munkához szükséges eseményt.
         device.getSerialPort().on('data', function (data) {
+            // Ha DeviceManager-rel kapcsolatos válasz érkezik...
+            if (data.startsWith('dm:')) {
+                // ...akkor lefuttatjuk az eseményét.
+                
+
+            }
             console.log('result: ' + data);
         });
     }
@@ -164,16 +167,18 @@ class DeviceManager {
      */
     public static doAction(action: DeviceAction): void {
 
+        // Eszköz lekérdezése.
         var device: Device = DeviceManager.getDeviceByID(action.getDeviceID());
+        
+        // Ha nincs ilyen eszközünk, akkor hibával kilépünk.
         if (null == device) {
             Messages.warn('No stored device found with ID: ' + action.getDeviceID());
             return;
         }
 
-        var actionStr: string = action.toString() + '$' + ReusableCounter.generate() + '\n';
-
+        // Parancs küldése az eszközre.
         device.getSerialPort().write(
-            actionStr,
+            action.toString() + '\n',
             function (err, res) {
                 // Hiba esetén kilépünk.
                 if (err) {
@@ -182,6 +187,6 @@ class DeviceManager {
                 }
             });
 
-        console.log('doAction: ' + Date.now() + " " + actionStr.replace('\n', ''));
+        console.log('doAction: ' + Date.now() + " " + action.toString());
     }
 }
