@@ -39,52 +39,16 @@ var UniqueIdentifier = (function () {
 })();
 /// <reference path="../utils/UniqueIdentifier.ts"/>
 var DeviceAction = (function () {
-    function DeviceAction(deviceID, actionID, action, params, callback) {
-        this.uid = new UniqueIdentifier();
-        this.running = false;
-        this.finished = false;
+    function DeviceAction(deviceID, command) {
+        this.command = '';
         this.deviceID = deviceID;
-        this.actionID = actionID;
-        this.action = action;
-        this.params = params;
-        this.callback = callback;
+        this.command = command;
     }
     DeviceAction.prototype.getDeviceID = function () {
         return this.deviceID;
     };
-    DeviceAction.prototype.getActionID = function () {
-        return this.actionID;
-    };
-    DeviceAction.prototype.getUniqueID = function () {
-        return this.uid;
-    };
-    DeviceAction.prototype.isRunning = function () {
-        return this.running;
-    };
-    DeviceAction.prototype.isFinished = function () {
-        return this.finished;
-    };
-    DeviceAction.prototype.start = function () {
-        this.running = true;
-        this.finished = false;
-    };
-    DeviceAction.prototype.finish = function () {
-        if (this.finished)
-            return;
-        this.running = false;
-        this.finished = true;
-        if (null != this.callback)
-            this.callback();
-    };
-    DeviceAction.prototype.compare = function (a) {
-        return this.getUniqueID() === a.getUniqueID();
-    };
-    DeviceAction.prototype.toString = function () {
-        return 'dm:'
-            + this.action
-            + '|' + this.deviceID
-            + (this.params ? '|' + this.params.join('|') : '')
-            + '$' + this.uid;
+    DeviceAction.prototype.getCommand = function () {
+        return this.command;
     };
     return DeviceAction;
 })();
@@ -201,61 +165,18 @@ var List = (function () {
     return List;
 })();
 /// <reference path="DeviceAction.ts"/>
+/// <reference path="DeviceManager.ts"/>
 /// <reference path="../utils/Map.ts"/>
 /// <reference path="../utils/List.ts"/>
 var ActionManager = (function () {
     function ActionManager() {
     }
     ActionManager.storeAction = function (action) {
-        if (0 == action.getActionID())
-            return action;
-        if (!this.actions.has(action.getActionID())) {
-            ActionManager.actions.set(action.getActionID(), new List());
-        }
-        ActionManager.actions.get(action.getActionID()).append(action);
-        ActionManager.actionsByUID.set(action.getUniqueID.toString(), action);
+        this.actions.append(action);
+        DeviceManager.doAction(action);
         return action;
     };
-    ActionManager.storeActionsGroup = function () {
-    };
-    ActionManager.doNextAction = function (actionUID) {
-        var action = ActionManager.actionsByUID.get(actionUID);
-        if (null == action) {
-            Messages.warn('There are no stored DeviceAction by UID: ' + actionUID);
-            return;
-        }
-        var list = ActionManager.actions.get(action.getActionID());
-        var actionNext = null;
-        for (var i = 0; i < list.size(); i++) {
-            var lAction = list.get(i);
-            if (!lAction.isRunning() && !lAction.isFinished() && lAction.getDeviceID() == action.getDeviceID()) {
-                actionNext = lAction;
-                break;
-            }
-        }
-        if (null != actionNext) {
-            actionNext.start();
-            DeviceManager.doAction(actionNext);
-        }
-        else {
-            var allFinished = true;
-            for (var i = 0; i < list.size(); i++) {
-                allFinished = allFinished && list.get(i).isFinished();
-            }
-            if (allFinished) {
-                ActionManager.actions.delete(action.getActionID());
-                ReusableCounter.delete(action.getActionID());
-                var nextActionID = 0;
-                ActionManager.actions.forEach(function (value, key, map) {
-                });
-            }
-        }
-        action.finish();
-        ActionManager.actionsByUID.delete(actionUID);
-    };
-    ActionManager.actions = new Map();
-    ActionManager.actionsByUID = new Map();
-    ActionManager.currentActionID = 0;
+    ActionManager.actions = new List();
     return ActionManager;
 })();
 var Messages = (function () {
@@ -368,7 +289,8 @@ var DeviceManager = (function () {
             Messages.log('Device stored with ID: ' + ID);
         }
         device.getSerialPort().on('data', function (data) {
-            if (data.startsWith('dm:')) {
+            if (data.startsWith('mFinished')) {
+                console.log('m oksi');
             }
             console.log('result: ' + data);
         });
@@ -376,19 +298,26 @@ var DeviceManager = (function () {
     DeviceManager.getDeviceByID = function (ID) {
         return DeviceManager.devices.get(ID);
     };
+    DeviceManager.getDevicesIDs = function () {
+        var IDs = [];
+        DeviceManager.devices.forEach(function (v, k, m) {
+            IDs.push(k);
+        });
+        return IDs;
+    };
     DeviceManager.doAction = function (action) {
         var device = DeviceManager.getDeviceByID(action.getDeviceID());
         if (null == device) {
             Messages.warn('No stored device found with ID: ' + action.getDeviceID());
             return;
         }
-        device.getSerialPort().write(action.toString() + '\n', function (err, res) {
+        device.getSerialPort().write(action.getCommand() + '\n', function (err, res) {
             if (err) {
                 Messages.error(err);
                 return;
             }
         });
-        console.log('doAction: ' + Date.now() + " " + action.toString());
+        console.log('doAction: ' + action.getCommand());
     };
     DeviceManager.devices = new Map();
     return DeviceManager;
@@ -506,17 +435,30 @@ var MotorControlHandler = (function (_super) {
         _super.call(this, '/motorcontrol', 'Motor control', parent);
     }
     MotorControlHandler.prototype.postDataProcess = function (req, res, data) {
-        for (var _i = 0, _a = ['MB', 'MBN']; _i < _a.length; _i++) {
-            var key = _a[_i];
+        // Motorok vezérlése.
+        /*for (var key of ['MB', 'MBN']) {
+            // Ha van adat az elküldött űrlapon, akkor feldolgozzuk.
             if (data[key]) {
-                var value = Number(data[key]);
+                var value: number = Number(data[key]);
+                // Érvénytelen adatokat nem küldünk.
                 if (!isNaN(value) && 0 != value) {
-                    ActionManager.storeAction(new DeviceAction(key, ReusableCounter.generate(), 'angle', [value], function () {
-                        console.log(this.getDeviceID() + ' is finished.');
-                    }));
+                    // Parancs tárolása.
+                    //DeviceManager.doAction(
+                    ActionManager.storeAction(
+                        new DeviceAction(
+                            key,
+                            ReusableCounter.generate(),
+                            'angle',
+                            [value],
+                            function () {
+                                console.log(this.getDeviceID() + ' is finished.');
+                            }
+                        )
+                    );
                 }
             }
-        }
+        }*/
+        ActionManager.storeAction(new DeviceAction('ARM1', 'm+123-456'));
         return false;
     };
     ;
@@ -524,10 +466,12 @@ var MotorControlHandler = (function (_super) {
         res.write('<br><br>');
         res.write('<center>' +
             '<form action="' + this.getPath() + '" method="post">' +
-            '<table border="0">' +
-            ' <tr><td>Bottom motion:</td><td><input type="number" name="MB" value="10"></td></tr>' +
-            ' <tr><td>Bottom needle:</td><td><input type="number" name="MBN" value="15"></td></tr>' +
-            ' <tr><td colspan="2" align="center"><br><input type="submit" value="Send"></td></tr>' +
+            '<table border="0">');
+        for (var _i = 0, _a = DeviceManager.getDevicesIDs(); _i < _a.length; _i++) {
+            var s = _a[_i];
+            res.write(' <tr><td>' + s + ':</td><td><input type="number" name="MB" value="10"></td></tr>');
+        }
+        res.write(' <tr><td colspan="2" align="center"><br><input type="submit" value="Send"></td></tr>' +
             '</table>' +
             '</form>' +
             '</center>');
@@ -535,8 +479,81 @@ var MotorControlHandler = (function (_super) {
     ;
     return MotorControlHandler;
 })(RequestHandler);
+/// <reference path="RequestHandler.ts"/>
+/// <reference path="../utils/Utils.ts"/>
+/// <reference path="../devices/DeviceAction.ts"/>
+/// <reference path="../devices/DeviceManager.ts"/>
+var ArmHandler = (function (_super) {
+    __extends(ArmHandler, _super);
+    function ArmHandler(parent) {
+        _super.call(this, '/armcontrol', 'Arm control', parent);
+        this.motorsCount = 3;
+    }
+    ArmHandler.prototype.postDataProcess = function (req, res, data) {
+        // Motorok vezérlése.
+        /*for (var key of ['MB', 'MBN']) {
+            // Ha van adat az elküldött űrlapon, akkor feldolgozzuk.
+            if (data[key]) {
+                var value: number = Number(data[key]);
+                // Érvénytelen adatokat nem küldünk.
+                if (!isNaN(value) && 0 != value) {
+                    // Parancs tárolása.
+                    //DeviceManager.doAction(
+                    ActionManager.storeAction(
+                        new DeviceAction(
+                            key,
+                            ReusableCounter.generate(),
+                            'angle',
+                            [value],
+                            function () {
+                                console.log(this.getDeviceID() + ' is finished.');
+                            }
+                        )
+                    );
+                }
+            }
+        }*/
+        if (data['m']) {
+            ActionManager.storeAction(new DeviceAction('ARM1', 'm+123-456'));
+        }
+        return false;
+    };
+    ;
+    ArmHandler.prototype.handle = function (req, res) {
+        // Megjelenítjük az űrlapokat. 
+        for (var _i = 0, _a = DeviceManager.getDevicesIDs(); _i < _a.length; _i++) {
+            var deviceID = _a[_i];
+            res.write('<br><br>');
+            res.write('<center>' +
+                deviceID +
+                '<form action="' + this.getPath() + '" method="post">' +
+                '<table border="1">' +
+                ' <thead>' +
+                '  <tr>');
+            for (var i = 0; i < this.motorsCount; i++) {
+                res.write('<th>' + i + '</th>');
+            }
+            res.write('  </tr>');
+            res.write(' </thead>');
+            res.write(' <tbody>');
+            res.write(' <tr>');
+            for (var i = 0; i < this.motorsCount; i++) {
+                res.write('<td><input type="input" name="m' + i + '" value="x" size=1></td>');
+            }
+            res.write(' </tr>');
+            res.write(' <tr><td colspan="' + this.motorsCount + '" align="center"><input type="submit" value="Send"></td></tr>' +
+                ' </tbody>' +
+                '</table>' +
+                '</form>' +
+                '</center>');
+        }
+    };
+    ;
+    return ArmHandler;
+})(RequestHandler);
 /// <reference path="MainMenuHandler.ts"/>
 /// <reference path="MotorControlHandler.ts"/>
+/// <reference path="ArmControlHandler.ts"/>
 var Server = (function () {
     function Server(port) {
         this.port = -1;
@@ -612,6 +629,7 @@ var createHttpServer = function () {
         var mmh = new MainMenuHandler();
         server.registerHandler(mmh);
         server.registerHandler(new MotorControlHandler(mmh));
+        server.registerHandler(new ArmHandler(mmh));
         server.start(function () {
             isHttpServerCreated = true;
             Messages.log('HTTP server listening on port ' + server.getPort() + '.');

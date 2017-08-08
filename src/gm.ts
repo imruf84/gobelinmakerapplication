@@ -75,6 +75,7 @@ var createHttpServer = function () {
         var mmh: MainMenuHandler = new MainMenuHandler();
         server.registerHandler(mmh);
         server.registerHandler(new MotorControlHandler(mmh));
+        server.registerHandler(new ArmHandler(mmh));
 
         // Szerver indítása.
         server.start(

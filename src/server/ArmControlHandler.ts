@@ -6,7 +6,12 @@
 /**
  * Motorvezérlő kezelője.
  */
-class MotorControlHandler extends RequestHandler {
+class ArmHandler extends RequestHandler {
+
+    /**
+     * Motorok száma.
+     */
+    private motorsCount: number = 3;
 
     /**
      * Konstruktor.
@@ -14,7 +19,7 @@ class MotorControlHandler extends RequestHandler {
      * @param parent szülő kérés
      */
     constructor(parent: RequestHandler) {
-        super('/motorcontrol', 'Motor control', parent);
+        super('/armcontrol', 'Arm control', parent);
     }
 
     /**
@@ -51,7 +56,9 @@ class MotorControlHandler extends RequestHandler {
             }
         }*/
 
-        ActionManager.storeAction(new DeviceAction('ARM1', 'm+123-456'));
+        if (data['m']) {
+            ActionManager.storeAction(new DeviceAction('ARM1', 'm+123-456'));
+        }
 
         return false;
     };
@@ -64,24 +71,46 @@ class MotorControlHandler extends RequestHandler {
      */
     protected handle(req, res): void {
 
-        // Megjelenítjük az űrlapot. 
-        res.write('<br><br>');
-        res.write(
-            '<center>' +
-            '<form action="' + this.getPath() + '" method="post">' +
-            '<table border="0">');
+        // Megjelenítjük az űrlapokat. 
 
-        // Motorok beviteli mezőjének a megjelenítése.
-        for (var s of DeviceManager.getDevicesIDs()) {
-            res.write(' <tr><td>' + s + ':</td><td><input type="number" name="MB" value="10"></td></tr>');
+        for (var deviceID of DeviceManager.getDevicesIDs()) {
+
+            res.write('<br><br>');
+            res.write(
+                '<center>' +
+                deviceID + 
+                '<form action="' + this.getPath() + '" method="post">' +
+                '<table border="1">' +
+                ' <thead>' + 
+                '  <tr>'
+            );
+
+            for (var i = 0; i < this.motorsCount; i++) {
+                res.write('<th>' + i + '</th>');
+            }
+
+            res.write('  </tr>');
+            res.write(' </thead>');
+            res.write(' <tbody>');
+            
+
+            // Motorok beviteli mezőjének a megjelenítése.
+            res.write(' <tr>');
+            for (var i = 0; i < this.motorsCount; i++) {
+                res.write('<td><input type="input" name="m' + i + '" value="+" size=1></td>');
+            }
+            res.write(' </tr>');
+            
+            res.write(
+                //' <tr><td colspan="' + this.motorsCount + '" align="center"><input name="m" type="text" value=""></td></tr>' +
+                ' <tr><td colspan="' + this.motorsCount + '" align="center"><input type="submit" value="Send"></td></tr>' +
+                ' </tbody>' + 
+                '</table>' +
+                '</form>' +
+                '</center>'
+            );
+
         }
-
-        res.write(
-            ' <tr><td colspan="2" align="center"><br><input type="submit" value="Send"></td></tr>' +
-            '</table>' +
-            '</form>' +
-            '</center>'
-        );
 
     };
 }

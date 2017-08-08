@@ -142,10 +142,9 @@ class DeviceManager {
         // Beállítjuk a későbbi munkához szükséges eseményt.
         device.getSerialPort().on('data', function (data) {
             // Ha DeviceManager-rel kapcsolatos válasz érkezik...
-            if (data.startsWith('dm:')) {
+            if (data.startsWith('mFinished')) {
                 // ...akkor lefuttatjuk az eseményét.
-                
-
+                console.log('m oksi');
             }
             console.log('result: ' + data);
         });
@@ -158,6 +157,21 @@ class DeviceManager {
      */
     public static getDeviceByID(ID: string): Device {
         return DeviceManager.devices.get(ID);
+    }
+
+    /**
+     * Eszközök azonosítóinak a lekérdezése.
+     * 
+     * @return eszközök azonosítói
+     */
+    public static getDevicesIDs(): string[] {
+        var IDs: string[] = [];
+
+        DeviceManager.devices.forEach((v: Device, k: string, m: Map<string, Device>)=>{
+            IDs.push(k);
+        });
+
+        return IDs;
     }
 
     /**
@@ -178,7 +192,7 @@ class DeviceManager {
 
         // Parancs küldése az eszközre.
         device.getSerialPort().write(
-            action.toString() + '\n',
+            action.getCommand() + '\n',
             function (err, res) {
                 // Hiba esetén kilépünk.
                 if (err) {
@@ -187,6 +201,6 @@ class DeviceManager {
                 }
             });
 
-        console.log('doAction: ' + Date.now() + " " + action.toString());
+        console.log('doAction: ' + action.getCommand());
     }
 }

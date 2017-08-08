@@ -1,5 +1,6 @@
 /// <reference path="MainMenuHandler.ts"/>
 /// <reference path="MotorControlHandler.ts"/>
+/// <reference path="ArmControlHandler.ts"/>
 
 declare function require(s: string);
 
