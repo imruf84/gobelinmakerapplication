@@ -538,7 +538,7 @@ var ArmHandler = (function (_super) {
             res.write(' <tbody>');
             res.write(' <tr>');
             for (var i = 0; i < this.motorsCount; i++) {
-                res.write('<td><input type="input" name="m' + i + '" value="x" size=1></td>');
+                res.write('<td><input type="input" name="m' + i + '" value="+" size=1></td>');
             }
             res.write(' </tr>');
             res.write(' <tr><td colspan="' + this.motorsCount + '" align="center"><input type="submit" value="Send"></td></tr>' +
@@ -581,9 +581,130 @@ var Server = (function () {
     };
     return Server;
 })();
+var Vector = (function () {
+    function Vector() {
+    }
+    Vector.add = function (a, b) {
+        return [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+    };
+    Vector.sub = function (a, b) {
+        return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+    };
+    Vector.dot = function (a, b) {
+        return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+        ;
+    };
+    Vector.mul = function (a, b) {
+        return [a[0] * b, a[1] * b, a[2] * b];
+        ;
+    };
+    Vector.len = function (a) {
+        return Math.sqrt(Vector.dot(a, a));
+    };
+    Vector.nor = function (a) {
+        return Vector.mul(a, 1.0 / Math.sqrt(Vector.dot(a, a)));
+    };
+    Vector.vec = function (a, b) {
+        return [-a[2] * b[1] + a[1] * b[2], a[2] * b[0] - a[0] * b[2], -a[1] * b[0] + a[0] * b[1]];
+        ;
+    };
+    Vector.copy = function (a) {
+        return [a[0], a[1], a[2]];
+    };
+    Vector.ang = function (a, b) {
+        var angle = 180.0 / Math.PI * Math.acos(Vector.dot(a, b) / (Vector.len(a) * Vector.len(b)));
+        if (Vector.vec(a, b)[2] < .0)
+            angle -= 360;
+        return angle;
+    };
+    Vector.interpolate = function (a, b, t) {
+        return [(1 - t) * a[0] + t * b[0], (1 - t) * a[1] + t * b[1], (1 - t) * a[2] + t * b[2]];
+    };
+    Vector.toSteps = function (angle) {
+        return Math.floor(angle / 1.8);
+    };
+    return Vector;
+})();
+/// <reference path="../math/Vector.ts"/>
+var Geom = (function () {
+    function Geom() {
+    }
+    Geom.circleSphereIntersection = function (cx, cy, cz, cr, cnx, cny, cnz, sx, sy, sz, sr, vx, vy, vz) {
+        var cc = [cx, cy, cz];
+        var cn = [cnx, cny, cnz];
+        cn = Vector.nor(cn);
+        var sc = [sx, sy, sz];
+        var pv = Vector.sub(Vector.sub(sc, cc), Vector.mul(cn, (Vector.dot(Vector.sub(sc, cc), cn) / Vector.dot(cn, cn))));
+        var d = Vector.len(pv);
+        var r = Math.sqrt(sr * sr - Vector.dot(Vector.sub(pv, Vector.sub(sc, cc)), Vector.sub(pv, Vector.sub(sc, cc))));
+        var c = Vector.add(cc, pv);
+        var cd = .5 * (cr * cr + d * d - r * r) / d;
+        var F = Vector.add(cc, Vector.mul(Vector.nor(pv), cd));
+        var h = Math.sqrt(cr * cr - cd * cd);
+        var M = Vector.add(F, Vector.mul(Vector.nor(Vector.add(Vector.vec(cn, pv), Vector.mul(cn, Vector.dot(cn, pv)))), h));
+        var v1 = [vx, vy, vz];
+        var v2 = Vector.sub(M, cc);
+        var angle = Vector.ang(v1, v2);
+        return angle;
+    };
+    Geom.calcAngle = function (x0, y0, z0, x1, y1, z1, dm, lm, le, la, nx, ny, nz, ux, uy, uz, t) {
+        var ex = (1 - t) * x0 + t * x1;
+        var ey = (1 - t) * y0 + t * y1;
+        var ez = (1 - t) * z0 + t * z1;
+        return Geom.circleSphereIntersection(ux * dm / 2., uy * dm / 2., uz * dm / 2., lm, nx, ny, nz, ex + ux * le / 2., ey + uy * le / 2., ez + uz * le / 2., la, ux, uy, uz);
+    };
+    return Geom;
+})();
+/// <reference path="../math/Geom.ts"/>
+var DeltaRobot = (function () {
+    function DeltaRobot() {
+        var x0 = .5;
+        var y0 = -1.;
+        var z0 = 3;
+        var x1 = 1.5;
+        var y1 = 1.;
+        var z1 = 1;
+        var dm = 5.;
+        var lm = 2.;
+        var le = 1.;
+        var la = 3.;
+        var prevSteps = [0, 0, 0, 0];
+        for (var t = .0; t < 1.; t += .0001) {
+            var angles = [
+                Geom.calcAngle(x0, y0, z0, x1, y1, z1, dm, lm, le, la, 0, 1, 0, 1, 0, 0, t),
+                Geom.calcAngle(x0, y0, z0, x1, y1, z1, dm, lm, le, la, -1, 0, 0, 0, 1, 0, t),
+                Geom.calcAngle(x0, y0, z0, x1, y1, z1, dm, lm, le, la, 0, -1, 0, -1, 0, 0, t),
+                Geom.calcAngle(x0, y0, z0, x1, y1, z1, dm, lm, le, la, 1, 0, 0, 0, -1, 0, t)
+            ];
+            var control = "";
+            var hasControl = false;
+            for (var i = 0; i < 4; i++) {
+                if (isNaN(angles[i])) {
+                    Messages.error("NaN detected!");
+                    return;
+                }
+                var step = Vector.toSteps(angles[i]);
+                if (step != prevSteps[i]) {
+                    if (t > .0) {
+                        control += "[" + (i + 1) + ":" + (step - prevSteps[i]) + "]";
+                        hasControl = true;
+                    }
+                    prevSteps[i] = step;
+                }
+            }
+            if (hasControl) {
+                Messages.log(t + ":" + control);
+            }
+        }
+    }
+    return DeltaRobot;
+})();
 /// <reference path="devices/DeviceManager.ts"/>
 /// <reference path="server/Server.ts"/>
 /// <reference path="utils/Utils.ts"/>
+/// <reference path="robot/DeltaRobot.ts"/>
+var r = new DeltaRobot();
+process.exit(1);
 var commandLineArgs = require('command-line-args');
 var getUsage = require('command-line-usage');
 var optionParts = [

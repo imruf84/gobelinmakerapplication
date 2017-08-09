@@ -1,8 +1,12 @@
 /// <reference path="devices/DeviceManager.ts"/>
 /// <reference path="server/Server.ts"/>
 /// <reference path="utils/Utils.ts"/>
+/// <reference path="robot/DeltaRobot.ts"/>
 
 declare var process;
+
+var r: DeltaRobot = new DeltaRobot();
+process.exit(1);
 
 // Parancssori argumentumok lekérdezése.
 var commandLineArgs = require('command-line-args');
@@ -21,10 +25,10 @@ if (!(Utils.keys(options).length > 0) || options.help) {
         header: 'Gobelin maker control application.',
         content: 'Controls the gobelin maker machine..'
     },
-        {
-            header: 'Options',
-            optionList: optionParts
-        }
+    {
+        header: 'Options',
+        optionList: optionParts
+    }
     ]));
     process.exit(1);
 }
@@ -55,7 +59,7 @@ if (isConnectToDevices) {
         function () {
             if (scanDeviceFinished) return;
             scanDeviceFinished = true;
-            
+
             // Ha adott idő után sem találunk eszközt, akkor jelezzük.
             Messages.warn("No connected devices found.");
             // HTTP szerver létrehozása.
