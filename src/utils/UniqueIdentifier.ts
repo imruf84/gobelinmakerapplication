@@ -25,13 +25,13 @@ class UniqueIdentifier {
     constructor() {
 
         // Azonosító előállítása az aktuális dátumból (unix timestamp).
-        this.ID = Math.round(+new Date()/1000);
+        this.ID = Math.round(+new Date() / 1000);
 
         // Ha létezik már ilyen, akkor léptetjük.
         UniqueIdentifier.lastCounter = (this.ID == UniqueIdentifier.lastUID ? ++UniqueIdentifier.lastCounter : 0);
         this.counter = UniqueIdentifier.lastCounter;
 
-        UniqueIdentifier.lastUID = this.ID; 
+        UniqueIdentifier.lastUID = this.ID;
     }
 
     /**

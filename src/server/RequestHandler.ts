@@ -97,10 +97,10 @@ class RequestHandler {
      * @param res válasz
      */
     public getHandler(req, res): void {
-        
+
         // Ha vannak paraméterek, akkor végrehajtjuk az adatok feldolgozását.
         if (Utils.keys(req.body).length > 0) {
-            
+
             // ...majd frissítjük az oldalt (hogy minden post adat eltűnjön).
             // HACK: - ez azért kell, hogy az oldal bármikor frissíthető legyen a 'biztosan elhagyja az oldalt' figyelmeztetés nélkül
             if (!this.postDataProcess(req, res, req.body)) {
@@ -202,5 +202,5 @@ class RequestHandler {
      * @param data adatok
      * @return igaz esetén lefut a kérés további kiszolgálása, hamis esetén nem
      */
-    protected postDataProcess(req, res, data): boolean {return false;};
+    protected postDataProcess(req, res, data): boolean { return false; };
 }

@@ -6,7 +6,7 @@ class ReusableCounter {
     /**
      * Használatban lévő kulcsok tárolója.
      */
-    private static keys:Map<number, number> = new Map<number, number>();
+    private static keys: Map<number, number> = new Map<number, number>();
 
     /**
      * Új kulcs generálása.

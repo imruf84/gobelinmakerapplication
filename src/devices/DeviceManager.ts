@@ -61,7 +61,7 @@ class DeviceManager {
 
                 // Port létrehozása.
                 var sp = new SerialPort(port.comName, {
-                    autoOpen: false, 
+                    autoOpen: false,
                     baudrate: 9600,
                     parser: SerialPort.parsers.readline('\n')
                 });
@@ -167,7 +167,7 @@ class DeviceManager {
     public static getDevicesIDs(): string[] {
         var IDs: string[] = [];
 
-        DeviceManager.devices.forEach((v: Device, k: string, m: Map<string, Device>)=>{
+        DeviceManager.devices.forEach((v: Device, k: string, m: Map<string, Device>) => {
             IDs.push(k);
         });
 
@@ -183,7 +183,7 @@ class DeviceManager {
 
         // Eszköz lekérdezése.
         var device: Device = DeviceManager.getDeviceByID(action.getDeviceID());
-        
+
         // Ha nincs ilyen eszközünk, akkor hibával kilépünk.
         if (null == device) {
             Messages.warn('No stored device found with ID: ' + action.getDeviceID());

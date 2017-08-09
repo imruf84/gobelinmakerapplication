@@ -22,7 +22,7 @@ class List<T> {
     }
 
     public remove(index: number): boolean {
-        
+
         if (index > -1) {
             this.items.splice(index, 1);
             return true;

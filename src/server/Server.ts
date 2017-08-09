@@ -31,7 +31,7 @@ class Server {
         var express = require('express');
         var bodyParser = require("body-parser");
         this.expressApp = express();
-        this.expressApp.use(bodyParser.urlencoded({extended: false}));
+        this.expressApp.use(bodyParser.urlencoded({ extended: false }));
         this.expressApp.use(bodyParser.json());
     }
 

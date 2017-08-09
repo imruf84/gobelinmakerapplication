@@ -16,9 +16,9 @@ void StepperMotor::step(boolean inverse)
 {
   digitalWrite(directionPin, inverse ? HIGH : LOW);
   digitalWrite(stepPin, HIGH);
-  //Serial.print(inverse ? "-" : "+");
-  //Serial.print("m");
-  //Serial.print(index);
+  debug(inverse ? "-" : "+");
+  debug("m");
+  debug(index);
 }
 
 void StepperMotor::stop()

@@ -96,7 +96,7 @@ class Geom {
         dm: number, lm: number, le: number, la: number,
         nx: number, ny: number, nz: number,
         ux: number, uy: number, uz: number,
-        t: number):number {
+        t: number): number {
 
         var ex: number = (1 - t) * x0 + t * x1;
         var ey: number = (1 - t) * y0 + t * y1;

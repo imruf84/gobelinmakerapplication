@@ -78,10 +78,10 @@ class ArmHandler extends RequestHandler {
             res.write('<br><br>');
             res.write(
                 '<center>' +
-                deviceID + 
+                deviceID +
                 '<form action="' + this.getPath() + '" method="post">' +
                 '<table border="1">' +
-                ' <thead>' + 
+                ' <thead>' +
                 '  <tr>'
             );
 
@@ -92,7 +92,7 @@ class ArmHandler extends RequestHandler {
             res.write('  </tr>');
             res.write(' </thead>');
             res.write(' <tbody>');
-            
+
 
             // Motorok beviteli mezőjének a megjelenítése.
             res.write(' <tr>');
@@ -100,11 +100,11 @@ class ArmHandler extends RequestHandler {
                 res.write('<td><input type="input" name="m' + i + '" value="+" size=1></td>');
             }
             res.write(' </tr>');
-            
+
             res.write(
                 //' <tr><td colspan="' + this.motorsCount + '" align="center"><input name="m" type="text" value=""></td></tr>' +
                 ' <tr><td colspan="' + this.motorsCount + '" align="center"><input type="submit" value="Send"></td></tr>' +
-                ' </tbody>' + 
+                ' </tbody>' +
                 '</table>' +
                 '</form>' +
                 '</center>'
