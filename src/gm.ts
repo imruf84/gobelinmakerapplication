@@ -10,7 +10,7 @@ process.exit(1);
 
 // Parancssori argumentumok lekérdezése.
 var commandLineArgs = require('command-line-args');
-var getUsage = require('command-line-usage')
+var getUsage = require('command-line-usage');
 
 var optionParts = [
     { name: 'help', alias: 'h', type: Boolean },

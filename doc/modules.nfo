@@ -15,15 +15,15 @@ Linux alatt nodejs telepítése:
     sudo rm /usr/bin/g++
     sudo ln -s /usr/bin/g++-4.8 /usr/bin/g++
 
-    wget http://nodejs.org/dist/latest-v6.x/node-v6.3.1.tar.gz
-    tar -xvf node-v6.3.1.tar.gz
+    wget http://nodejs.org/dist/latest-v6.x/node-v6.11.2.tar.gz
+    tar -xvf node-v6.11.2.tar.gz
 
     vagy git: 
         git clone https://github.com/nodejs/node.git
         cd node
-        git checkout v6.3.1
+        git checkout v6.11.2
 
-    cd node-v6.3.1
+    cd node-v6.11.2
     ./configure
     make
     sudo make install
