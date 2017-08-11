@@ -15,15 +15,15 @@ Linux alatt nodejs telepítése:
     sudo rm /usr/bin/g++
     sudo ln -s /usr/bin/g++-4.8 /usr/bin/g++
 
-    wget http://nodejs.org/dist/latest-v6.x/node-v6.11.2.tar.gz
-    tar -xvf node-v6.11.2.tar.gz
+    wget http://nodejs.org/dist/node-latest.tar.gz
+    tar -xzf node-latest.tar.gz
 
     vagy git: 
         git clone https://github.com/nodejs/node.git
         cd node
         git checkout v6.11.2
 
-    cd node-v6.11.2
+    cd node-v...
     ./configure
     make
     sudo make install
@@ -33,6 +33,16 @@ Linux alatt nodejs telepítése:
 
     Meglehet, hogy linux alatt nem találná a modulokat ezért kell ez a link.
     ln -s /usr/local/lib/node /usr/local/lib/node_modules
+
+ImageJ miatt kell a Java is:
+----------------------------
+    sudo apt-get install default-jre
+    wget http://wsr.imagej.net/distros/linux/ij150-linux64-java8.zip
+    sudo apt-get install unzip
+    unzip ij150-linux64-java8.zip
+    cd ImageJ
+    wget https://downloads.sourceforge.net/project/imageja/headless/experimental/headless.jar
+    ??????sudo ln -s ./usr/bin/gcc-4.8 /usr/bin/gcc
 
 Modulok:
 --------
